@@ -1,7 +1,8 @@
 # GridWars
 
-**Tema**: Jogo competitivo assíncrono de puzzle tático e criação de arenas.
-Escopo: O sistema permite que jogadores construam arenas posicionando armadilhas e obstáculos. Para publicar um desafio, o criador deve obrigatoriamente validar a fase provando que é possível concluí-la. Os oponentes devem traçar rotas para tentar sobreviver e chegar ao fim.
+**Tema**: Jogo competitivo assíncrono de puzzle tático e criação de arenas. 
+
+**Escopo**: O sistema permite que jogadores construam arenas posicionando armadilhas e obstáculos. Para publicar um desafio, o criador deve obrigatoriamente validar a fase provando que é possível concluí-la. Os oponentes devem traçar rotas para tentar sobreviver e chegar ao fim.
 
 ## Funcionalidades Principais 
 
