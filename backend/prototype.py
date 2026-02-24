@@ -29,12 +29,12 @@ CORES = {
 class PathMaker(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("PathMaker - Protótipo Tático")
+        self.title("GridWars")
         self.canvas = tk.Canvas(self, width=COLUNAS * TAMANHO_BLOCO, height=LINHAS * TAMANHO_BLOCO)
         self.canvas.pack()
         
-        self.lbl_status = tk.Label(self, text="Modo: PLANEJAMENTO | Setas: Desenhar | Espaço: Esperar | Enter: PLAY | Backspace: Apagar", font=("Arial", 10, "bold"))
-        self.lbl_status.pack(pady=5)
+        self.lbl_status = tk.Label(self, text="Modo: PLANEJAMENTO | Setas: Desenhar | Espaço: Esperar | Enter: PLAY | Backspace: Apagar", font=("Arial", 10, "bold"), wraplength=500, justify=tk.CENTER)
+        self.lbl_status.pack(pady=5, fill=tk.X, padx=5)
         
         self.setup_jogo()
         self.bind("<Key>", self.tecla_pressionada)
