@@ -1,0 +1,8 @@
+services:
+  api:
+    build: ./backend
+    container_name: gridwars_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./backend:/app"
