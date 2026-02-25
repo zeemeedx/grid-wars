@@ -1,0 +1,8 @@
+services:
+  python-app:
+    build: .
+    container_name: python-app-compose
+    working_dir: /app
+    volumes:
+      - ./code:/app
+    command: ["python", "main.py"]
