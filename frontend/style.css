@@ -1,0 +1,28 @@
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 60px);
+    gap: 5px;
+}
+
+.cell {
+    width: 60px;
+    height: 60px;
+    background: #CCCCCC;
+    cursor: pointer;
+}
+
+.cell.active {
+    background: #42B883
+}
+
+.title {
+    color: red
+}

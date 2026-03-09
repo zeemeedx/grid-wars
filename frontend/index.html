@@ -1,3 +1,38 @@
-<div id="app">{{ message }}</div>
+<!DOCTYPE html>
+<html>
 
-<script type="module" src="main.js"></script>
+<head>
+    <title>GridWars</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <script type="module">
+        import { createApp, ref } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+
+        createApp({
+            setup() {
+                const titleClass = ref('title')
+                const count = ref(0)
+
+                function increment() {
+                    count.value++
+                }
+
+                return { 
+                    titleClass,
+                    count,
+                    increment
+                }
+            }
+        }).mount('#app')
+    </script>
+
+    <div id="app">
+        <h1 :class="titleClass">Make me red</h1>
+        <button @click="increment">Count is {{ count }}</button>
+    </div>
+</body>
+
+</html>
+
