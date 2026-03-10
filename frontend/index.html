@@ -12,25 +12,38 @@
 
         createApp({
             setup() {
-                const titleClass = ref('title')
-                const count = ref(0)
+                const grade = ref(Array(100).fill(false))
 
-                function increment() {
-                    count.value++
+                const alternarCelula = (index) => {
+                    grade.value[index] = !grade.value[index]
                 }
 
-                return { 
-                    titleClass,
-                    count,
-                    increment
+                const iniciarDrag = (e) => { e.dataTransfer.setData('acao', 'ativar') }
+                const soltar = (index) => { grade.value[index] = true }
+
+                return {
+                    grade,
+                    alternarCelula,
+                    iniciarDrag,
+                    soltar
                 }
             }
         }).mount('#app')
     </script>
 
     <div id="app">
-        <h1 :class="titleClass">Make me red</h1>
-        <button @click="increment">Count is {{ count }}</button>
+        <div class="inventory">
+            <div class="item-drag" draggable="true" @dragstart="iniciarDrag">Arraste</div>
+        </div>
+
+        <div class="grid">
+            <div v-for="(ativo, index) in grade" :key="index"
+                 class="cell" :class="{ active: ativo }"
+                 @click="alternarCelula(index)"
+                 @dragover.prevent
+                 @drop="soltar(index)">
+            </div>
+        </div>
     </div>
 </body>
 

@@ -8,8 +8,8 @@ body {
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(3, 60px);
-    gap: 5px;
+    grid-template-columns: repeat(10, 60px);
+    gap: 1px;
 }
 
 .cell {
@@ -25,4 +25,19 @@ body {
 
 .title {
     color: red
+}
+
+.inventory {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.item-drag {
+    width: 60px;
+    height: 60px;
+    background: #42b800;
+    cursor: grab;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
