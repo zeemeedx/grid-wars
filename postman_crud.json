@@ -1,0 +1,81 @@
+{
+  "info": {
+    "name": "GridWars API - Lab Prog III",
+    "description": "Coleção para a testagem da API de GridWars",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Player",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Jogador 1\",\n  \"coins\": 0\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/players/",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["players", ""]
+        }
+      }
+    },
+    {
+      "name": "Read Player",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/players/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["players", "1"]
+        }
+      }
+    },
+    {
+      "name": "Update Player",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/players/1?coins=150",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["players", "1"],
+          "query": [
+            {
+              "key": "coins",
+              "value": "150",
+              "description": "Nova quantidade de coins passada via query parameter"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Delete Player",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/players/1",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "8000",
+          "path": ["players", "1"]
+        }
+      }
+    }
+  ]
+}

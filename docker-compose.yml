@@ -4,6 +4,8 @@ services:
   api:
     build: ./backend
     container_name: gridwars_api
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/gridwars
     ports:
       - "8000:8000"
     volumes:
