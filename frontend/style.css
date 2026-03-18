@@ -4,12 +4,17 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    background-color: bisque;
 }
 
 .grid {
     display: grid;
     grid-template-columns: repeat(10, 60px);
     gap: 1px;
+    border: 4px solid black;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: white;
 }
 
 .cell {
@@ -17,10 +22,12 @@ body {
     height: 60px;
     background: #CCCCCC;
     cursor: pointer;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 .cell.active {
-    background: #42B883
+    background: #222222
 }
 
 .title {
@@ -30,14 +37,44 @@ body {
 .inventory {
     margin-bottom: 20px;
     text-align: center;
+    border: 4px solid black;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: lightyellow;
 }
 
-.item-drag {
+.item {
     width: 60px;
     height: 60px;
-    background: #42b800;
-    cursor: grab;
+    background: #222222;
+    cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    transition: background 0.3s;
+}
+
+.item.selected::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+
+    background:
+        linear-gradient(to right, black 2px, transparent 2px) 0 0,
+        linear-gradient(to bottom, black 2px, transparent 2px) 0 0,
+        linear-gradient(to left, black 2px, transparent 2px) 100% 0,
+        linear-gradient(to bottom, black 2px, transparent 2px) 100% 0,
+        linear-gradient(to right, black 2px, transparent 2px) 0 100%,
+        linear-gradient(to top, black 2px, transparent 2px) 0 100%,
+        linear-gradient(to left, black 2px, transparent 2px) 100% 100%,
+        linear-gradient(to top, black 2px, transparent 2px) 100% 100%;
+
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+    
+    pointer-events: none;
 }

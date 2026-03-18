@@ -13,19 +13,32 @@
         createApp({
             setup() {
                 const grade = ref(Array(100).fill(false))
+                const itemSelecionado = ref(false)
+                const isDrawing = ref(false)
 
-                const alternarCelula = (index) => {
-                    grade.value[index] = !grade.value[index]
+                const toggleSelecao = () => { itemSelecionado.value = !itemSelecionado.value }
+
+                const pintar = (index) => {
+                    if (itemSelecionado.value && isDrawing.value) grade.value[index] = true
                 }
 
-                const iniciarDrag = (e) => { e.dataTransfer.setData('acao', 'ativar') }
-                const soltar = (index) => { grade.value[index] = true }
+                const iniciarDesenho = (index) => {
+                    isDrawing.value = true
+                    pintar(index)
+                }
+
+                const pararDesenho = () => {
+                    isDrawing.value = false
+                }
 
                 return {
                     grade,
-                    alternarCelula,
-                    iniciarDrag,
-                    soltar
+                    itemSelecionado,
+                    isDrawing,
+                    toggleSelecao,
+                    pintar,
+                    iniciarDesenho,
+                    pararDesenho
                 }
             }
         }).mount('#app')
@@ -33,15 +46,14 @@
 
     <div id="app">
         <div class="inventory">
-            <div class="item-drag" draggable="true" @dragstart="iniciarDrag">Arraste</div>
+            <div class="item" :class="{ selected: itemSelecionado }" @click="toggleSelecao"></div>
         </div>
 
-        <div class="grid">
+        <div class="grid" @mouseup.window="pararDesenho">
             <div v-for="(ativo, index) in grade" :key="index"
                  class="cell" :class="{ active: ativo }"
-                 @click="alternarCelula(index)"
-                 @dragover.prevent
-                 @drop="soltar(index)">
+                 @mousedown="iniciarDesenho(index)"
+                 @mouseenter="pintar(index)">
             </div>
         </div>
     </div>
