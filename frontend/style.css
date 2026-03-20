@@ -10,11 +10,11 @@ body {
 .grid {
     display: grid;
     grid-template-columns: repeat(10, 60px);
-    gap: 1px;
     border: 4px solid black;
     padding: 10px;
     border-radius: 10px;
     background-color: white;
+    position: relative;
 }
 
 .cell {
@@ -26,8 +26,16 @@ body {
     -webkit-user-drag: none;
 }
 
+.cell:hover {
+    background: #EEEEEE;
+}
+
 .cell.active {
     background: #222222
+}
+
+.cell.active:hover {
+    background-color: #444444;
 }
 
 .title {
@@ -56,6 +64,46 @@ body {
 }
 
 .item.selected::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    right: -5px;
+    bottom: -5px;
+
+    background:
+        linear-gradient(to right, black 2px, transparent 2px) 0 0,
+        linear-gradient(to bottom, black 2px, transparent 2px) 0 0,
+        linear-gradient(to left, black 2px, transparent 2px) 100% 0,
+        linear-gradient(to bottom, black 2px, transparent 2px) 100% 0,
+        linear-gradient(to right, black 2px, transparent 2px) 0 100%,
+        linear-gradient(to top, black 2px, transparent 2px) 0 100%,
+        linear-gradient(to left, black 2px, transparent 2px) 100% 100%,
+        linear-gradient(to top, black 2px, transparent 2px) 100% 100%;
+
+    background-repeat: no-repeat;
+    background-size: 20px 20px;
+    
+    pointer-events: none;
+}
+
+.erase {
+    width: 60px;
+    height: 60px;
+    background: #FF4444;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+
+    position: absolute;
+    right: -80px;
+
+    border-radius: 10px;
+}
+
+.erase.selected::after {
     content: '';
     position: absolute;
     top: -5px;
