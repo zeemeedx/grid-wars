@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>GridWars</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <script type="module">
+        import { createApp, ref } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+
+        createApp({
+            setup() {
+                const grade = ref(Array(100).fill(false))
+                const itemSelecionado = ref(false)
+                const borrachaSelecionada = ref(false)
+                const isDrawing = ref(false)
+
+                const toggleSelecao = () => { 
+                    itemSelecionado.value = !itemSelecionado.value 
+                    if (itemSelecionado.value) borrachaSelecionada.value = false
+                }
+                const toggleBorracha = () => {
+                    borrachaSelecionada.value = !borrachaSelecionada.value
+                    if (borrachaSelecionada.value) itemSelecionado.value = false
+                }
+
+                const pintar = (index) => {
+                    if (!isDrawing.value) return
+
+                    if (itemSelecionado.value) {
+                        grade.value[index] = true
+                    } else if (borrachaSelecionada.value) {
+                        grade.value[index] = false
+                    }
+
+                    grade.value[0] = false
+                    grade.value[99] = false
+                }
+
+                const iniciarDesenho = (index) => {
+                    isDrawing.value = true
+                    pintar(index)
+                }
+
+                const pararDesenho = () => {
+                    isDrawing.value = false
+                }
+
+                return {
+                    grade,
+                    itemSelecionado,
+                    borrachaSelecionada,
+                    isDrawing,
+                    toggleSelecao,
+                    toggleBorracha,
+                    pintar,
+                    iniciarDesenho,
+                    pararDesenho
+                }
+            }
+        }).mount('#app')
+    </script>
+
+    <div id="app">
+        <div class="inventory">
+            <div class="item" :class="{ selected: itemSelecionado }" @click="toggleSelecao"></div>
+        </div>
+
+        <div class="grid" @mouseup.window="pararDesenho">
+            <div class="erase" :class="{ selected: borrachaSelecionada }" @click="toggleBorracha">
+                🗑️
+            </div>
+
+            <div v-for="(ativo, index) in grade" :key="index"
+                class="cell" :class="{ active: ativo }"
+                @mousedown="iniciarDesenho(index)"
+                @mouseenter="pintar(index)">
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+

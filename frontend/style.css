@@ -126,3 +126,72 @@ body {
     
     pointer-events: none;
 }
+
+/* Estilos do Menu Inicial */
+.menu-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: white;
+    padding: 40px;
+    border: 4px solid black;
+    border-radius: 10px;
+    min-width: 400px;
+}
+
+.main-title {
+    font-size: 48px;
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-family: sans-serif;
+    text-transform: uppercase;
+}
+
+.menu-buttons {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.menu-btn {
+    padding: 15px 30px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: lightyellow;
+    border: 4px solid black;
+    border-radius: 10px;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.menu-btn:hover {
+    background-color: #ffdd55;
+}
+
+.menu-btn:active {
+    transform: scale(0.95);
+}
+
+.ranking-box {
+    width: 100%;
+    border-top: 4px solid black;
+    padding-top: 20px;
+    margin-top: 10px;
+    text-align: left;
+    font-family: sans-serif;
+}
+
+.ranking-box ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ranking-box li {
+    font-size: 18px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #EEEEEE;
+    border: 2px solid black;
+    border-radius: 5px;
+}

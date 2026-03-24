@@ -1,87 +1,57 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>GridWars</title>
+    <title>GridWars - Menu</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+    <div id="app" class="menu-container">
+        <h1 class="main-title">GridWars</h1>
+        
+        <div class="menu-buttons">
+            <button class="menu-btn" @click="irParaCriar">Criar</button>
+            <button class="menu-btn" @click="verRanking">Ver Ranking</button>
+        </div>
+
+        <div v-if="mostrarRanking" class="ranking-box">
+            <h2>Ranking</h2>
+            <ul v-if="jogadores.length > 0">
+                <li v-for="(player, index) in jogadores" :key="player.id">
+                    <strong>{{ index + 1 }}º</strong> - {{ player.name }} ({{ player.coins }} moedas)
+                </li>
+            </ul>
+            <p v-else>Nenhum jogador encontrado.</p>
+        </div>
+    </div>
+
     <script type="module">
         import { createApp, ref } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
 
         createApp({
             setup() {
-                const grade = ref(Array(100).fill(false))
-                const itemSelecionado = ref(false)
-                const borrachaSelecionada = ref(false)
-                const isDrawing = ref(false)
+                const mostrarRanking = ref(false)
+                const jogadores = ref([])
 
-                const toggleSelecao = () => { 
-                    itemSelecionado.value = !itemSelecionado.value 
-                    if (itemSelecionado.value) borrachaSelecionada.value = false
-                }
-                const toggleBorracha = () => {
-                    borrachaSelecionada.value = !borrachaSelecionada.value
-                    if (borrachaSelecionada.value) itemSelecionado.value = false
+                const irParaCriar = () => {
+                    window.location.href = 'editor.html'
                 }
 
-                const pintar = (index) => {
-                    if (!isDrawing.value) return
-
-                    if (itemSelecionado.value) {
-                        grade.value[index] = true
-                    } else if (borrachaSelecionada.value) {
-                        grade.value[index] = false
+                const verRanking = async () => {
+                    mostrarRanking.value = true
+                    try {
+                        const response = await fetch('http://localhost:8000/players/')
+                        if (response.ok) {
+                            jogadores.value = await response.json()
+                        }
+                    } catch (error) {
+                        console.error("Erro ao buscar o ranking da API:", error)
                     }
-
-                    grade.value[0] = false
-                    grade.value[99] = false
                 }
 
-                const iniciarDesenho = (index) => {
-                    isDrawing.value = true
-                    pintar(index)
-                }
-
-                const pararDesenho = () => {
-                    isDrawing.value = false
-                }
-
-                return {
-                    grade,
-                    itemSelecionado,
-                    borrachaSelecionada,
-                    isDrawing,
-                    toggleSelecao,
-                    toggleBorracha,
-                    pintar,
-                    iniciarDesenho,
-                    pararDesenho
-                }
+                return { mostrarRanking, jogadores, irParaCriar, verRanking }
             }
         }).mount('#app')
     </script>
-
-    <div id="app">
-        <div class="inventory">
-            <div class="item" :class="{ selected: itemSelecionado }" @click="toggleSelecao"></div>
-        </div>
-
-        <div class="grid" @mouseup.window="pararDesenho">
-            <div class="erase" :class="{ selected: borrachaSelecionada }" @click="toggleBorracha">
-                🗑️
-            </div>
-
-            <div v-for="(ativo, index) in grade" :key="index"
-                class="cell" :class="{ active: ativo }"
-                @mousedown="iniciarDesenho(index)"
-                @mouseenter="pintar(index)">
-            </div>
-        </div>
-    </div>
 </body>
-
 </html>
-

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from pydantic import BaseModel
@@ -19,6 +20,14 @@ class Player(Base):
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="GridWars API", version="1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 # DTOs
 class PlayerCreate(BaseModel):
@@ -53,6 +62,10 @@ def create_player(player: PlayerCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_player)
     return db_player
+
+@app.get("/players/")
+def read_all_players(db: Session = Depends(get_db)):
+    return db.query(Player).order_by(Player.coins.desc()).all()
 
 @app.get("/players/{player_id}")
 def read_player(player_id: int, db: Session = Depends(get_db)):
