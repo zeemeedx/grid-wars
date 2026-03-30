@@ -13,31 +13,32 @@
 
         createApp({
             setup() {
-                const grade = ref(Array(100).fill(false))
-                const itemSelecionado = ref(false)
+                const grade = ref(Array(100).fill(0))
+                const itemSelecionado = ref(null)
                 const borrachaSelecionada = ref(false)
                 const isDrawing = ref(false)
 
-                const toggleSelecao = () => { 
-                    itemSelecionado.value = !itemSelecionado.value 
-                    if (itemSelecionado.value) borrachaSelecionada.value = false
+                const selecionarItem = (id) => {
+                    itemSelecionado.value = id
+                    borrachaSelecionada.value = false
                 }
+
                 const toggleBorracha = () => {
                     borrachaSelecionada.value = !borrachaSelecionada.value
-                    if (borrachaSelecionada.value) itemSelecionado.value = false
+                    if (borrachaSelecionada.value) itemSelecionado.value = null
                 }
 
                 const pintar = (index) => {
                     if (!isDrawing.value) return
 
-                    if (itemSelecionado.value) {
-                        grade.value[index] = true
+                    if (itemSelecionado.value !== null) {
+                        grade.value[index] = itemSelecionado.value
                     } else if (borrachaSelecionada.value) {
-                        grade.value[index] = false
+                        grade.value[index] = 0
                     }
 
-                    grade.value[0] = false
-                    grade.value[99] = false
+                    grade.value[0] = 0
+                    grade.value[99] = 0
                 }
 
                 const iniciarDesenho = (index) => {
@@ -54,7 +55,7 @@
                     itemSelecionado,
                     borrachaSelecionada,
                     isDrawing,
-                    toggleSelecao,
+                    selecionarItem,
                     toggleBorracha,
                     pintar,
                     iniciarDesenho,
@@ -66,7 +67,8 @@
 
     <div id="app">
         <div class="inventory">
-            <div class="item" :class="{ selected: itemSelecionado }" @click="toggleSelecao"></div>
+            <div class="item type-1" :class="{ selected: itemSelecionado === 1 }" @click="selecionarItem(1)"></div>
+            <div class="item type-2" :class="{ selected: itemSelecionado === 2 }" @click="selecionarItem(2)"></div>
         </div>
 
         <div class="grid" @mouseup.window="pararDesenho">
@@ -74,8 +76,8 @@
                 🗑️
             </div>
 
-            <div v-for="(ativo, index) in grade" :key="index"
-                class="cell" :class="{ active: ativo }"
+            <div v-for="(tipo, index) in grade" :key="index"
+                class="cell" :class="'type-' + tipo"
                 @mousedown="iniciarDesenho(index)"
                 @mouseenter="pintar(index)">
             </div>

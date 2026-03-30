@@ -30,12 +30,12 @@ body {
     background: #EEEEEE;
 }
 
-.cell.active {
+.cell.type-1 {
     background: #222222
 }
 
-.cell.active:hover {
-    background-color: #444444;
+.cell.type-2 {
+    background: #070;
 }
 
 .title {
@@ -44,11 +44,13 @@ body {
 
 .inventory {
     margin-bottom: 20px;
-    text-align: center;
-    border: 4px solid black;
+    border: 4px solid rgb(0, 0, 0);
     padding: 10px;
     border-radius: 10px;
     background-color: lightyellow;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
 }
 
 .item {
@@ -61,6 +63,14 @@ body {
     align-items: center;
     position: relative;
     transition: background 0.3s;
+}
+
+.item.type-1 {
+    background: #222222;
+}
+
+.item.type-2 {
+    background: #070;
 }
 
 .item.selected::after {
@@ -127,7 +137,6 @@ body {
     pointer-events: none;
 }
 
-/* Estilos do Menu Inicial */
 .menu-container {
     display: flex;
     flex-direction: column;
