@@ -9,17 +9,33 @@
 
 <body>
     <script type="module">
-        import { createApp, ref } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+        import { createApp, ref, onMounted, onUnmounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
 
         createApp({
             setup() {
                 const grade = ref(Array(100).fill(0))
                 const itemSelecionado = ref(null)
                 const borrachaSelecionada = ref(false)
+                const planejarTrajeto = ref(false)
+                const mostrarPlay = ref(false)
                 const isDrawing = ref(false)
                 const playerPos = ref(0)
+                const rotaPlanejada = ref([0])
 
+                const togglePlanejador = () => {
+                    planejarTrajeto.value = !planejarTrajeto.value
+                    if (planejarTrajeto.value) {
+                        itemSelecionado.value = null
+                        borrachaSelecionada.value = false
+                        playerPos.value = 0
+                        rotaPlanejada.value = [0]
+                        mostrarPlay.value = false
+                    }
+                }
+            
                 const moverJogador = (event) => {
+                    if (!planejarTrajeto.value || mostrarPlay.value) return
+
                     const tecla = event.key.toLowerCase()
                     let novaPos = playerPos.value
 
@@ -28,8 +44,38 @@
                     else if (tecla == 'a' && playerPos.value % 10 !== 0) novaPos -= 1
                     else if (tecla == 'd' && playerPos.value % 10 !== 9) novaPos += 1
 
-                    playerPos.value = novaPos
+                    if (grade.value[novaPos] === 1) return
+                    
+                    if (novaPos !== playerPos.value) {
+                        playerPos.value = novaPos
+                        rotaPlanejada.value.push(novaPos)
+
+                        if (grade.value[novaPos] === -2) {
+                            mostrarPlay.value = true
+                        }
+                    }
                 }
+
+                const executarPlay = () => {
+                    mostrarPlay.value = false
+                    planejarTrajeto.value = false
+                    playerPos.value = rotaPlanejada.value[0]
+
+                    let passo = 1
+                    const velocidade = 300
+
+                    const intervalo = setInterval(() => {
+                        if (passo < rotaPlanejada.value.length) {
+                            playerPos.value = rotaPlanejada.value[passo]
+                            passo++
+                        } else {
+                            clearInterval(intervalo)
+                        }
+                    }, velocidade)
+                }
+
+                onMounted(() => window.addEventListener('keydown', moverJogador))
+                onUnmounted(() => window.removeEventListener('keydown', moverJogador))
 
                 grade.value[99] = -2
 
@@ -52,7 +98,6 @@
                         grade.value[index] = 0
                     }
 
-                    grade.value[0] = -1
                     grade.value[99] = -2
                 }
 
@@ -70,11 +115,17 @@
                     itemSelecionado,
                     borrachaSelecionada,
                     isDrawing,
+                    playerPos,
+                    planejarTrajeto,
+                    mostrarPlay,
                     selecionarItem,
                     toggleBorracha,
                     pintar,
                     iniciarDesenho,
-                    pararDesenho
+                    pararDesenho,
+                    moverJogador,
+                    togglePlanejador,
+                    executarPlay
                 }
             }
         }).mount('#app')
@@ -90,9 +141,15 @@
             <div class="erase" :class="{ selected: borrachaSelecionada }" @click="toggleBorracha">
                 🗑️
             </div>
+            <div class="plan" :class="{ selected: planejarTrajeto }" @click="togglePlanejador">
+                ✏️
+            </div>
+            <div class="play" v-if="mostrarPlay" @click="executarPlay">
+                ▶️
+            </div>
 
             <div v-for="(tipo, index) in grade" :key="index"
-                class="cell" :class="'type-' + tipo"
+                class="cell" :class="['type-' + tipo, { 'has-player': index === playerPos }]"
                 @mousedown="iniciarDesenho(index)"
                 @mouseenter="pintar(index)">
             </div>
