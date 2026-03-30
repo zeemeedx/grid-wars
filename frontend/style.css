@@ -35,7 +35,19 @@ body {
 }
 
 .cell.type-2 {
-    background: #070;
+    background: #007;
+}
+
+.cell.type--1 {
+    width: 40px;
+    height: 40px;
+    background: #F00;
+    border-radius: 50%;
+    display: center;
+}
+
+.cell.type--2 {
+    background: #0A4;
 }
 
 .title {
@@ -50,7 +62,7 @@ body {
     background-color: lightyellow;
     display: flex;
     flex-direction: row;
-    gap: 20px;
+    gap: 10px;
 }
 
 .item {
@@ -70,7 +82,7 @@ body {
 }
 
 .item.type-2 {
-    background: #070;
+    background: #007;
 }
 
 .item.selected::after {

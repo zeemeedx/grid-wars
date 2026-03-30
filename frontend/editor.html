@@ -17,6 +17,21 @@
                 const itemSelecionado = ref(null)
                 const borrachaSelecionada = ref(false)
                 const isDrawing = ref(false)
+                const playerPos = ref(0)
+
+                const moverJogador = (event) => {
+                    const tecla = event.key.toLowerCase()
+                    let novaPos = playerPos.value
+
+                    if (tecla == 'w' && playerPos.value >= 10) novaPos -= 10
+                    else if (tecla == 's' && playerPos.value <= 89) novaPos += 10
+                    else if (tecla == 'a' && playerPos.value % 10 !== 0) novaPos -= 1
+                    else if (tecla == 'd' && playerPos.value % 10 !== 9) novaPos += 1
+
+                    playerPos.value = novaPos
+                }
+
+                grade.value[99] = -2
 
                 const selecionarItem = (id) => {
                     itemSelecionado.value = id
@@ -37,8 +52,8 @@
                         grade.value[index] = 0
                     }
 
-                    grade.value[0] = 0
-                    grade.value[99] = 0
+                    grade.value[0] = -1
+                    grade.value[99] = -2
                 }
 
                 const iniciarDesenho = (index) => {
