@@ -19,6 +19,7 @@
                 const planejarTrajeto = ref(false)
                 const mostrarPlay = ref(false)
                 const isDrawing = ref(false)
+                const isPlaying = ref(false)
                 const playerPos = ref(0)
                 const rotaPlanejada = ref([0])
                 const mostrarVitoria = ref(false)
@@ -61,6 +62,7 @@
                     mostrarPlay.value = false
                     planejarTrajeto.value = false
                     playerPos.value = rotaPlanejada.value[0]
+                    isPlaying.value = true
 
                     let passo = 1
                     const velocidade = 300
@@ -71,6 +73,7 @@
                             passo++
                         } else {
                             clearInterval(intervalo)
+                            isPlaying.value = false
 
                             if (grade.value[playerPos.value] === -2) {
                                 mostrarVitoria.value = true
@@ -141,6 +144,7 @@
                     itemSelecionado,
                     borrachaSelecionada,
                     isDrawing,
+                    isPlaying,
                     playerPos,
                     planejarTrajeto,
                     mostrarPlay,
@@ -181,7 +185,7 @@
             </div>
 
             <div v-for="(tipo, index) in grade" :key="index"
-                class="cell" :class="['type-' + tipo, { 'has-player': index === playerPos, 'is-trail': planejarTrajeto && rotaPlanejada.includes(index) }]"
+                class="cell" :class="['type-' + tipo, { 'has-player': index === playerPos, 'is-trail': (planejarTrajeto || isPlaying) && rotaPlanejada.includes(index) }]"
                 @mousedown="iniciarDesenho(index)"
                 @mouseenter="pintar(index)">
             </div>
