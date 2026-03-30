@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy import create_engine, Column, Integer, String, JSON
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from pydantic import BaseModel
 import os
@@ -16,6 +16,11 @@ class Player(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     coins = Column(Integer, default=0)
+
+class GameMap(Base):
+    __tablename__ = "maps"
+    id = Column(Integer, primary_key=True, index=True)
+    grid = Column(JSON)
 
 Base.metadata.create_all(bind=engine)
 
@@ -33,6 +38,9 @@ app.add_middleware(
 class PlayerCreate(BaseModel):
     name: str
     coins: int = 0
+
+class MapCreate(BaseModel):
+    grid: list[int]
 
 def get_db():
     db = SessionLocal()
@@ -92,3 +100,10 @@ def delete_player(player_id: int, db: Session = Depends(get_db)):
     db.delete(player)
     db.commit()
     return {"message": "Player deleted"}
+
+@app.post("/maps/")
+def create_map(map_data: MapCreate, db: Session = Depends(get_db)):
+    db_map = GameMap(grid=map_data.grid)
+    db.add(db_map)
+    db.commit()
+    return {"message": "Map saved succesfully"}

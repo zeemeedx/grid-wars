@@ -21,6 +21,7 @@
                 const isDrawing = ref(false)
                 const playerPos = ref(0)
                 const rotaPlanejada = ref([0])
+                const mostrarVitoria = ref(false)
 
                 const togglePlanejador = () => {
                     planejarTrajeto.value = !planejarTrajeto.value
@@ -70,8 +71,33 @@
                             passo++
                         } else {
                             clearInterval(intervalo)
+
+                            if (grade.value[playerPos.value] === -2) {
+                                mostrarVitoria.value = true
+                            }
                         }
                     }, velocidade)
+                }
+
+                const continuarEditando = () => {
+                    mostrarVitoria.value = false
+                    planejarTrajeto.value = false
+                    playerPos.value = 0
+                    rotaPlanejada.value = [0]
+                }
+
+                const salvarMapa = async () => {
+                    try {
+                        await fetch("http://localhost:8000/maps/", {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ grid: grade.value })
+                        })
+                        alert("Mapa salvo no banco de dados.")
+                        continuarEditando()
+                    } catch (error) {
+                        console.error("Erro ao salvar: ", error)
+                    }
                 }
 
                 onMounted(() => window.addEventListener('keydown', moverJogador))
@@ -118,6 +144,8 @@
                     playerPos,
                     planejarTrajeto,
                     mostrarPlay,
+                    mostrarVitoria,
+                    rotaPlanejada,
                     selecionarItem,
                     toggleBorracha,
                     pintar,
@@ -125,7 +153,9 @@
                     pararDesenho,
                     moverJogador,
                     togglePlanejador,
-                    executarPlay
+                    executarPlay,
+                    continuarEditando,
+                    salvarMapa
                 }
             }
         }).mount('#app')
@@ -138,18 +168,20 @@
         </div>
 
         <div class="grid" @mouseup.window="pararDesenho">
-            <div class="erase" :class="{ selected: borrachaSelecionada }" @click="toggleBorracha">
-                🗑️
-            </div>
-            <div class="plan" :class="{ selected: planejarTrajeto }" @click="togglePlanejador">
-                ✏️
-            </div>
-            <div class="play" v-if="mostrarPlay" @click="executarPlay">
-                ▶️
+            <div class="erase" :class="{ selected: borrachaSelecionada }" @click="toggleBorracha">🗑️</div>
+            <div class="plan" :class="{ selected: planejarTrajeto }" @click="togglePlanejador">✏️</div>
+            <div class="play" v-if="mostrarPlay" @click="executarPlay">▶️</div>
+
+            <div class="popup" v-if="mostrarVitoria">
+                <h2>Você venceu! Parabéns!</h2>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button @click="salvarMapa">Salvar Mapa</button>
+                    <button @click="continuarEditando">Continuar Editando</button>
+                </div>
             </div>
 
             <div v-for="(tipo, index) in grade" :key="index"
-                class="cell" :class="['type-' + tipo, { 'has-player': index === playerPos }]"
+                class="cell" :class="['type-' + tipo, { 'has-player': index === playerPos, 'is-trail': planejarTrajeto && rotaPlanejada.includes(index) }]"
                 @mousedown="iniciarDesenho(index)"
                 @mouseenter="pintar(index)">
             </div>
