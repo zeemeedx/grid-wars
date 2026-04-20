@@ -107,3 +107,14 @@ def create_map(map_data: MapCreate, db: Session = Depends(get_db)):
     db.add(db_map)
     db.commit()
     return {"message": "Map saved succesfully"}
+
+@app.get("/maps/")
+def read_all_maps(db: Session = Depends(get_db)):
+    return db.query(GameMap).all()
+
+@app.get("/maps/{map_id}")
+def read_map(map_id: int, db: Session = Depends(get_db)):
+    game_map = db.query(GameMap).filter(GameMap.id == map_id).first()
+    if not game_map:
+        raise HTTPException(status_code=404, detail="Map not found")
+    return game_map

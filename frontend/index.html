@@ -11,6 +11,7 @@
         
         <div class="menu-buttons">
             <button class="menu-btn" @click="irParaCriar">Criar</button>
+            <button class="menu-btn" @click="irParaMapas">Jogar Mapas</button>
             <button class="menu-btn" @click="verRanking">Ver Ranking</button>
         </div>
 
@@ -37,6 +38,10 @@
                     window.location.href = 'editor.html'
                 }
 
+                const irParaMapas = () => {
+                    window.location.href = 'maps.html'
+                }
+
                 const verRanking = async () => {
                     mostrarRanking.value = true
                     try {
@@ -49,7 +54,7 @@
                     }
                 }
 
-                return { mostrarRanking, jogadores, irParaCriar, verRanking }
+                return { mostrarRanking, jogadores, irParaCriar, irParaMapas, verRanking }
             }
         }).mount('#app')
     </script>

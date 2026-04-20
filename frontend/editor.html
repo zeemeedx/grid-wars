@@ -24,6 +24,16 @@
                 const rotaPlanejada = ref([0])
                 const mostrarVitoria = ref(false)
 
+                const moedas = ref(0)
+                const itensBloqueados = ref({
+                    1: false,
+                    2: false,
+                    3: true
+                })
+                const precos = {
+                    3: 50
+                }
+
                 const togglePlanejador = () => {
                     planejarTrajeto.value = !planejarTrajeto.value
                     if (planejarTrajeto.value) {
@@ -77,6 +87,7 @@
 
                             if (grade.value[playerPos.value] === -2) {
                                 mostrarVitoria.value = true
+                                moedas.value += 10
                             }
                         }
                     }, velocidade)
@@ -103,12 +114,45 @@
                     }
                 }
 
-                onMounted(() => window.addEventListener('keydown', moverJogador))
+                const voltar = () => {
+                    window.location.href = 'index.html'
+                }
+
+                onMounted(async () => {
+                    window.addEventListener('keydown', moverJogador)
+                    
+                    const urlParams = new URLSearchParams(window.location.search)
+                    const mapId = urlParams.get('map_id')
+                    
+                    if (mapId) {
+                        try {
+                            const response = await fetch(`http://localhost:8000/maps/${mapId}`)
+                            if (response.ok) {
+                                const mapData = await response.json()
+                                if (mapData.grid) {
+                                    grade.value = mapData.grid
+                                    grade.value[99] = -2 // Ensures target remains
+                                }
+                            }
+                        } catch (error) {
+                            console.error("Erro ao carregar mapa: ", error)
+                        }
+                    }
+                })
                 onUnmounted(() => window.removeEventListener('keydown', moverJogador))
 
                 grade.value[99] = -2
 
                 const selecionarItem = (id) => {
+                    if (itensBloqueados.value[id]) {
+                        if (moedas.value >= precos[id]) {
+                            moedas.value -= precos[id]
+                            itensBloqueados.value[id] = false
+                        } else {
+                            alert(`Moedas insuficientes! Custa ${precos[id]} moedas.`)
+                        }
+                        return
+                    }
                     itemSelecionado.value = id
                     borrachaSelecionada.value = false
                 }
@@ -120,6 +164,7 @@
 
                 const pintar = (index) => {
                     if (!isDrawing.value) return
+                    if (index === 0 || index === 99) return
 
                     if (itemSelecionado.value !== null) {
                         grade.value[index] = itemSelecionado.value
@@ -140,6 +185,9 @@
                 }
 
                 return {
+                    moedas,
+                    itensBloqueados,
+                    precos,
                     grade,
                     itemSelecionado,
                     borrachaSelecionada,
@@ -159,19 +207,25 @@
                     togglePlanejador,
                     executarPlay,
                     continuarEditando,
-                    salvarMapa
+                    salvarMapa,
+                    voltar
                 }
             }
         }).mount('#app')
     </script>
 
     <div id="app">
+        <button class="back-btn" @click="voltar">⬅ Voltar</button>
         <div class="inventory">
             <div class="item type-1" :class="{ selected: itemSelecionado === 1 }" @click="selecionarItem(1)"></div>
             <div class="item type-2" :class="{ selected: itemSelecionado === 2 }" @click="selecionarItem(2)"></div>
+            <div class="item type-3" :class="{ selected: itemSelecionado === 3, locked: itensBloqueados[3] }" @click="selecionarItem(3)">
+                <span v-if="itensBloqueados[3]" class="price">{{ precos[3] }}🪙</span>
+            </div>
         </div>
 
         <div class="grid" @mouseup.window="pararDesenho">
+            <div class="coins-display">🪙{{ moedas }}</div>
             <div class="erase" :class="{ selected: borrachaSelecionada }" @click="toggleBorracha">🗑️</div>
             <div class="plan" :class="{ selected: planejarTrajeto }" @click="togglePlanejador">✏️</div>
             <div class="play" v-if="mostrarPlay" @click="executarPlay">▶️</div>

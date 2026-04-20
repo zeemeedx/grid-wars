@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GridWars - Mapas</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <button class="back-btn" onclick="window.location.href='index.html'">⬅ Voltar</button>
+    <div id="app" class="menu-container">
+        <h1 class="main-title">Mapas Criados</h1>
+        
+        <div class="ranking-box">
+            <ul v-if="mapas.length > 0">
+                <li v-for="mapa in mapas" :key="mapa.id" @click="jogarMapa(mapa.id)" class="map-item">
+                    <strong>Mapa #{{ mapa.id }}</strong>
+                </li>
+            </ul>
+            <p v-else>Nenhum mapa encontrado.</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createApp, ref, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+
+        createApp({
+            setup() {
+                const mapas = ref([])
+
+                const carregarMapas = async () => {
+                    try {
+                        const response = await fetch('http://localhost:8000/maps/')
+                        if (response.ok) {
+                            mapas.value = await response.json()
+                        }
+                    } catch (error) {
+                        console.error("Erro ao buscar mapas da API:", error)
+                    }
+                }
+
+                const jogarMapa = (id) => {
+                    window.location.href = `editor.html?map_id=${id}`
+                }
+
+                onMounted(() => {
+                    carregarMapas()
+                })
+
+                return { mapas, jogarMapa }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
