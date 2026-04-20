@@ -3,3 +3,6 @@ uvicorn
 sqlalchemy
 psycopg2-binary
 pydantic
+bcrypt
+python-jose[cryptography]
+python-multipart

@@ -7,11 +7,16 @@
 </head>
 <body>
     <div id="app" class="menu-container">
+        <div v-if="user" class="user-info">
+            <span>👤 {{ user.username }} (🪙 {{ user.coins }})</span>
+            <button class="logout-btn" @click="logout">Sair</button>
+        </div>
         <h1 class="main-title">GridWars</h1>
         
         <div class="menu-buttons">
             <button class="menu-btn" @click="irParaCriar">Criar</button>
-            <button class="menu-btn" @click="irParaMapas">Jogar Mapas</button>
+            <button class="menu-btn" @click="irParaMapas(false)">Jogar Mapas</button>
+            <button class="menu-btn" @click="irParaMapas(true)">Meus Mapas</button>
             <button class="menu-btn" @click="verRanking">Ver Ranking</button>
         </div>
 
@@ -19,7 +24,7 @@
             <h2>Ranking</h2>
             <ul v-if="jogadores.length > 0">
                 <li v-for="(player, index) in jogadores" :key="player.id">
-                    <strong>{{ index + 1 }}º</strong> - {{ player.name }} ({{ player.coins }} moedas)
+                    <strong>{{ index + 1 }}º</strong> - {{ player.username }} ({{ player.coins }} moedas)
                 </li>
             </ul>
             <p v-else>Nenhum jogador encontrado.</p>
@@ -27,19 +32,51 @@
     </div>
 
     <script type="module">
-        import { createApp, ref } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
+        import { createApp, ref, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
 
         createApp({
             setup() {
+                const user = ref(null)
                 const mostrarRanking = ref(false)
                 const jogadores = ref([])
+
+                const checkAuth = async () => {
+                    const token = localStorage.getItem('token')
+                    if (!token) {
+                        window.location.href = 'auth.html'
+                        return
+                    }
+
+                    try {
+                        const response = await fetch('http://localhost:8000/users/me', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                        if (response.ok) {
+                            user.value = await response.json()
+                        } else {
+                            localStorage.removeItem('token')
+                            window.location.href = 'auth.html'
+                        }
+                    } catch (error) {
+                        console.error("Erro na autenticação:", error)
+                        window.location.href = 'auth.html'
+                    }
+                }
+
+                onMounted(checkAuth)
+
+                const logout = () => {
+                    localStorage.removeItem('token')
+                    window.location.href = 'auth.html'
+                }
 
                 const irParaCriar = () => {
                     window.location.href = 'editor.html'
                 }
 
-                const irParaMapas = () => {
-                    window.location.href = 'maps.html'
+                const irParaMapas = (mine) => {
+                    const url = mine ? `maps.html?mine=true` : 'maps.html'
+                    window.location.href = url
                 }
 
                 const verRanking = async () => {
@@ -54,7 +91,7 @@
                     }
                 }
 
-                return { mostrarRanking, jogadores, irParaCriar, irParaMapas, verRanking }
+                return { user, logout, mostrarRanking, jogadores, irParaCriar, irParaMapas, verRanking }
             }
         }).mount('#app')
     </script>

@@ -23,6 +23,9 @@
                 const playerPos = ref(0)
                 const rotaPlanejada = ref([0])
                 const mostrarVitoria = ref(false)
+                const isReadOnly = ref(false)
+                const currentMapPrice = ref(10)
+                const isCompleted = ref(false)
 
                 const moedas = ref(0)
                 const itensBloqueados = ref({
@@ -87,7 +90,28 @@
 
                             if (grade.value[playerPos.value] === -2) {
                                 mostrarVitoria.value = true
-                                moedas.value += 10
+                                if (isReadOnly.value) {
+                                    const token = localStorage.getItem('token')
+                                    const mapId = new URLSearchParams(window.location.search).get('map_id')
+
+                                    // Award coins only if NOT completed before
+                                    if (!isCompleted.value) {
+                                        moedas.value += currentMapPrice.value
+                                        
+                                        fetch(`http://localhost:8000/users/me/coins?coins=${moedas.value}`, {
+                                            method: 'PUT',
+                                            headers: { 'Authorization': `Bearer ${token}` }
+                                        }).catch(e => console.error("Erro ao salvar moedas:", e))
+
+                                        // Mark as completed in DB
+                                        fetch(`http://localhost:8000/maps/${mapId}/complete`, {
+                                            method: 'POST',
+                                            headers: { 'Authorization': `Bearer ${token}` }
+                                        }).then(() => {
+                                            isCompleted.value = true
+                                        }).catch(e => console.error("Erro ao completar mapa:", e))
+                                    }
+                                }
                             }
                         }
                     }, velocidade)
@@ -101,14 +125,37 @@
                 }
 
                 const salvarMapa = async () => {
+                    if (isReadOnly.value) return;
+
+                    const token = localStorage.getItem('token')
+                    if (!token) {
+                        alert("Você precisa estar logado para salvar um mapa.")
+                        window.location.href = 'auth.html'
+                        return
+                    }
+
+                    const preco = prompt("Defina o preço do seu mapa (10 a 100 moedas):", "10")
+                    const precoInt = parseInt(preco)
+                    if (isNaN(precoInt) || precoInt < 10 || precoInt > 100) {
+                        alert("Preço inválido! Deve ser entre 10 e 100.")
+                        return
+                    }
+
                     try {
-                        await fetch("http://localhost:8000/maps/", {
+                        const response = await fetch("http://localhost:8000/maps/", {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ grid: grade.value })
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ grid: grade.value, price: precoInt })
                         })
-                        alert("Mapa salvo no banco de dados.")
-                        continuarEditando()
+                        if (response.ok) {
+                            alert("Mapa salvo no banco de dados.")
+                            continuarEditando()
+                        } else {
+                            alert("Erro ao salvar mapa.")
+                        }
                     } catch (error) {
                         console.error("Erro ao salvar: ", error)
                     }
@@ -119,20 +166,47 @@
                 }
 
                 onMounted(async () => {
-                    window.addEventListener('keydown', moverJogador)
-                    
+                    const token = localStorage.getItem('token')
+                    if (!token) {
+                        window.location.href = 'auth.html'
+                        return
+                    }
+
                     const urlParams = new URLSearchParams(window.location.search)
                     const mapId = urlParams.get('map_id')
+                    const mode = urlParams.get('mode')
+                    isReadOnly.value = mode === 'play'
+
+                    try {
+                        const userRes = await fetch('http://localhost:8000/users/me', {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
+                        if (userRes.ok) {
+                            const userData = await userRes.json()
+                            moedas.value = userData.coins
+                        } else {
+                            localStorage.removeItem('token')
+                            window.location.href = 'auth.html'
+                        }
+                    } catch (e) {
+                        console.error("Erro ao carregar usuário", e)
+                    }
+
+                    window.addEventListener('keydown', moverJogador)
                     
                     if (mapId) {
                         try {
-                            const response = await fetch(`http://localhost:8000/maps/${mapId}`)
+                            const response = await fetch(`http://localhost:8000/maps/${mapId}`, {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            })
                             if (response.ok) {
                                 const mapData = await response.json()
                                 if (mapData.grid) {
                                     grade.value = mapData.grid
-                                    grade.value[99] = -2 // Ensures target remains
+                                    grade.value[99] = -2
                                 }
+                                currentMapPrice.value = mapData.price
+                                isCompleted.value = mapData.completed
                             }
                         } catch (error) {
                             console.error("Erro ao carregar mapa: ", error)
@@ -163,7 +237,7 @@
                 }
 
                 const pintar = (index) => {
-                    if (!isDrawing.value) return
+                    if (isReadOnly.value || !isDrawing.value) return
                     if (index === 0 || index === 99) return
 
                     if (itemSelecionado.value !== null) {
@@ -198,6 +272,7 @@
                     mostrarPlay,
                     mostrarVitoria,
                     rotaPlanejada,
+                    isReadOnly,
                     selecionarItem,
                     toggleBorracha,
                     pintar,
@@ -216,7 +291,7 @@
 
     <div id="app">
         <button class="back-btn" @click="voltar">⬅ Voltar</button>
-        <div class="inventory">
+        <div class="inventory" v-if="!isReadOnly">
             <div class="item type-1" :class="{ selected: itemSelecionado === 1 }" @click="selecionarItem(1)"></div>
             <div class="item type-2" :class="{ selected: itemSelecionado === 2 }" @click="selecionarItem(2)"></div>
             <div class="item type-3" :class="{ selected: itemSelecionado === 3, locked: itensBloqueados[3] }" @click="selecionarItem(3)">
@@ -226,15 +301,15 @@
 
         <div class="grid" @mouseup.window="pararDesenho">
             <div class="coins-display">🪙{{ moedas }}</div>
-            <div class="erase" :class="{ selected: borrachaSelecionada }" @click="toggleBorracha">🗑️</div>
+            <div class="erase" v-if="!isReadOnly" :class="{ selected: borrachaSelecionada }" @click="toggleBorracha">🗑️</div>
             <div class="plan" :class="{ selected: planejarTrajeto }" @click="togglePlanejador">✏️</div>
             <div class="play" v-if="mostrarPlay" @click="executarPlay">▶️</div>
 
-            <div class="popup" v-if="mostrarVitoria">
+            <div v-if="mostrarVitoria" class="popup">
                 <h2>Você venceu! Parabéns!</h2>
                 <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button @click="salvarMapa">Salvar Mapa</button>
-                    <button @click="continuarEditando">Continuar Editando</button>
+                    <button v-if="!isReadOnly" @click="salvarMapa">Salvar Mapa</button>
+                    <button @click="continuarEditando">{{ isReadOnly ? 'Jogar Novamente' : 'Continuar Editando' }}</button>
                 </div>
             </div>
 
@@ -248,4 +323,3 @@
 </body>
 
 </html>
-

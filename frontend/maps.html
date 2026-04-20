@@ -8,12 +8,17 @@
 <body>
     <button class="back-btn" onclick="window.location.href='index.html'">⬅ Voltar</button>
     <div id="app" class="menu-container">
-        <h1 class="main-title">Mapas Criados</h1>
+        <h1 class="main-title">{{ isMine ? 'Meus Mapas' : 'Mapas Criados' }}</h1>
         
         <div class="ranking-box">
             <ul v-if="mapas.length > 0" class="maps-list">
                 <li v-for="mapa in mapas" :key="mapa.id" @click="jogarMapa(mapa.id)" class="map-item">
-                    <strong>Mapa #{{ mapa.id }}</strong>
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <strong>Mapa #{{ mapa.id }}</strong>
+                        <span v-if="mapa.completed" title="Concluído">✅</span>
+                    </div>
+                    <span>Criado por: {{ mapa.owner_username }}</span>
+                    <span v-if="!isMine">Recompensa: {{ mapa.price }} 🪙</span>
                     <div class="mini-grid">
                         <div v-for="(tipo, index) in mapa.grid" :key="index" :class="['mini-cell', 'type-' + tipo]"></div>
                     </div>
@@ -29,12 +34,46 @@
         createApp({
             setup() {
                 const mapas = ref([])
+                const isMine = ref(false)
 
                 const carregarMapas = async () => {
+                    const urlParams = new URLSearchParams(window.location.search)
+                    isMine.value = urlParams.get('mine') === 'true'
+                    const token = localStorage.getItem('token')
+                    
+                    let url = 'http://localhost:8000/maps/'
+                    if (isMine.value) {
+                        try {
+                            const userRes = await fetch('http://localhost:8000/users/me', {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                            })
+                            if (userRes.ok) {
+                                const userData = await userRes.json()
+                                url += `?owner_id=${userData.id}`
+                            }
+                        } catch (e) { console.error(e) }
+                    }
+
                     try {
-                        const response = await fetch('http://localhost:8000/maps/')
+                        const response = await fetch(url, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        })
                         if (response.ok) {
-                            mapas.value = await response.json()
+                            const allMaps = await response.json()
+                            if (isMine.value) {
+                                mapas.value = allMaps
+                            } else {
+                                // Filter out mine if it's "Jogar Mapas"
+                                const userRes = await fetch('http://localhost:8000/users/me', {
+                                    headers: { 'Authorization': `Bearer ${token}` }
+                                })
+                                if (userRes.ok) {
+                                    const userData = await userRes.json()
+                                    mapas.value = allMaps.filter(m => m.owner_id !== userData.id)
+                                } else {
+                                    mapas.value = allMaps
+                                }
+                            }
                         }
                     } catch (error) {
                         console.error("Erro ao buscar mapas da API:", error)
@@ -42,14 +81,15 @@
                 }
 
                 const jogarMapa = (id) => {
-                    window.location.href = `editor.html?map_id=${id}`
+                    const mode = isMine.value ? 'edit' : 'play'
+                    window.location.href = `editor.html?map_id=${id}&mode=${mode}`
                 }
 
                 onMounted(() => {
                     carregarMapas()
                 })
 
-                return { mapas, jogarMapa }
+                return { mapas, jogarMapa, isMine }
             }
         }).mount('#app')
     </script>
