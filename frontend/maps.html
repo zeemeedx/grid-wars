@@ -11,9 +11,12 @@
         <h1 class="main-title">Mapas Criados</h1>
         
         <div class="ranking-box">
-            <ul v-if="mapas.length > 0">
+            <ul v-if="mapas.length > 0" class="maps-list">
                 <li v-for="mapa in mapas" :key="mapa.id" @click="jogarMapa(mapa.id)" class="map-item">
                     <strong>Mapa #{{ mapa.id }}</strong>
+                    <div class="mini-grid">
+                        <div v-for="(tipo, index) in mapa.grid" :key="index" :class="['mini-cell', 'type-' + tipo]"></div>
+                    </div>
                 </li>
             </ul>
             <p v-else>Nenhum mapa encontrado.</p>
