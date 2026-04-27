@@ -15,7 +15,7 @@
 
 * **F2**: Sistema de Economia e Inventário: Os usuários acumulam moedas ao passar de mapas desafiadores. Essas moedas são usadas para desbloquear novos tipos de obstáculos.
 
-* **F3**: Sistema de Pontuação e Ranking: Os usuários também acumulam pontos ao conquistar mapas ou a ter falhas nos mapas criados por eles. Essa pontuação é usada para construir um "Leaderboard" dos melhores jogadores/criadores de mapas.
+* **F3**: Sistema de Pontuação e Ranking: Os usuários também acumulam pontos ao conquistar mapas. Essa pontuação é usada para construir um "Leaderboard" dos melhores jogadores/criadores de mapas.
 
 A funcionalidade implementada no aplicativo mobile será a F1, uma vez que traçar o caminho do personagem com gestos na tela é a mecânica ideal para smartphones.
 
