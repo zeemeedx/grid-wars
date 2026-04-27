@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from sqlalchemy import create_engine, Column, Integer, String, JSON, ForeignKey, Table
+from sqlalchemy import create_engine, Column, Integer, String, JSON, ForeignKey, Table, func
 from sqlalchemy.orm import sessionmaker, Session, declarative_base, relationship
 from pydantic import BaseModel
 import bcrypt
@@ -70,8 +70,9 @@ class UserOut(BaseModel):
     username: str
     coins: int
     points: int
+    map_count: int = 0
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Token(BaseModel):
     access_token: str
@@ -188,8 +189,34 @@ async def complete_map(map_id: int, db: Session = Depends(get_db), current_user:
     return {"message": "Map already completed previously"}
 
 @app.get("/players/")
-def read_all_players(db: Session = Depends(get_db)):
-    return db.query(User).order_by(User.points.desc()).all()
+def read_all_players(sort_by: str = "points", db: Session = Depends(get_db)):
+    if sort_by == "maps":
+        # Subquery to count maps per user
+        map_counts = db.query(
+            GameMap.owner_id, 
+            func.count(GameMap.id).label("count")
+        ).group_by(GameMap.owner_id).subquery()
+
+        players = db.query(User, func.coalesce(map_counts.c.count, 0).label("m_count"))\
+            .outerjoin(map_counts, User.id == map_counts.c.owner_id)\
+            .order_by(func.coalesce(map_counts.c.count, 0).desc())\
+            .all()
+        
+        result = []
+        for p, count in players:
+            out = UserOut.from_orm(p)
+            out.map_count = count
+            result.append(out)
+        return result
+    else:
+        # Default sort by points
+        players = db.query(User).order_by(User.points.desc()).all()
+        result = []
+        for p in players:
+            out = UserOut.from_orm(p)
+            out.map_count = len(p.maps)
+            result.append(out)
+        return result
 
 @app.post("/maps/")
 def create_map(map_data: MapCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

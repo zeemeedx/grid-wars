@@ -510,3 +510,30 @@ h2 {
 .back-btn:hover {
     background-color: #ffdd55;
 }
+
+.ranking-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.ranking-tabs button {
+    background: #444;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.ranking-tabs button:hover {
+    background: #666;
+}
+
+.ranking-tabs button.active {
+    background: #ffcc00;
+    color: #222;
+}
