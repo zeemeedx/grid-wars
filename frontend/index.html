@@ -8,7 +8,7 @@
 <body>
     <div id="app" class="menu-container">
         <div v-if="user" class="user-info">
-            <span>👤 {{ user.username }} (🪙 {{ user.coins }})</span>
+            <span>👤 {{ user.username }} (⭐ {{ user.points }} | 🪙 {{ user.coins }})</span>
             <button class="logout-btn" @click="logout">Sair</button>
         </div>
         <h1 class="main-title">GridWars</h1>
@@ -21,10 +21,10 @@
         </div>
 
         <div v-if="mostrarRanking" class="ranking-box">
-            <h2>Ranking</h2>
+            <h2>Ranking (Top Jogadores)</h2>
             <ul v-if="jogadores.length > 0">
                 <li v-for="(player, index) in jogadores" :key="player.id">
-                    <strong>{{ index + 1 }}º</strong> - {{ player.username }} ({{ player.coins }} moedas)
+                    <strong>{{ index + 1 }}º</strong> {{ player.username }} ({{ player.points }} pontos)
                 </li>
             </ul>
             <p v-else>Nenhum jogador encontrado.</p>

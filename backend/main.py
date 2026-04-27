@@ -36,6 +36,7 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     coins = Column(Integer, default=0)
+    points = Column(Integer, default=0)
     maps = relationship("GameMap", back_populates="owner")
     finished_maps = relationship("GameMap", secondary=completed_maps)
 
@@ -43,7 +44,7 @@ class GameMap(Base):
     __tablename__ = "maps"
     id = Column(Integer, primary_key=True, index=True)
     grid = Column(JSON)
-    price = Column(Integer, default=10)
+    points = Column(Integer, default=20)
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="maps")
 
@@ -68,6 +69,7 @@ class UserOut(BaseModel):
     id: int
     username: str
     coins: int
+    points: int
     class Config:
         orm_mode = True
 
@@ -77,9 +79,10 @@ class Token(BaseModel):
 
 class MapCreate(BaseModel):
     grid: list[int]
-    price: int = 10
+    points: int = 20
 
 # Utils
+# ... (get_db, verify_password, etc remain same)
 def get_db():
     db = SessionLocal()
     try:
@@ -138,7 +141,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
     hashed_pwd = get_password_hash(user.password)
-    new_user = User(username=user.username, hashed_password=hashed_pwd)
+    new_user = User(username=user.username, hashed_password=hashed_pwd, coins=0, points=0)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -174,19 +177,24 @@ async def complete_map(map_id: int, db: Session = Depends(get_db), current_user:
     game_map = db.query(GameMap).filter(GameMap.id == map_id).first()
     if not game_map:
         raise HTTPException(status_code=404, detail="Map not found")
+    
     if game_map not in current_user.finished_maps:
         current_user.finished_maps.append(game_map)
+        current_user.points += game_map.points
+        current_user.coins += (game_map.points // 2)
         db.commit()
-    return {"message": "Map marked as completed"}
+        return {"message": "Map marked as completed", "points_earned": game_map.points, "coins_earned": game_map.points // 2}
+    
+    return {"message": "Map already completed previously"}
 
 @app.get("/players/")
 def read_all_players(db: Session = Depends(get_db)):
-    return db.query(User).order_by(User.coins.desc()).all()
+    return db.query(User).order_by(User.points.desc()).all()
 
 @app.post("/maps/")
 def create_map(map_data: MapCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    safe_price = max(10, min(100, map_data.price))
-    db_map = GameMap(grid=map_data.grid, price=safe_price, owner_id=current_user.id)
+    safe_points = max(20, min(200, map_data.points))
+    db_map = GameMap(grid=map_data.grid, points=safe_points, owner_id=current_user.id)
     db.add(db_map)
     db.commit()
     return {"message": "Map saved successfully"}
@@ -204,7 +212,7 @@ def read_all_maps(owner_id: int | None = None, db: Session = Depends(get_db), cu
         result.append({
             "id": m.id,
             "grid": m.grid,
-            "price": m.price,
+            "points": m.points,
             "owner_username": m.owner.username if m.owner else "Unknown",
             "owner_id": m.owner_id,
             "completed": is_completed
@@ -220,8 +228,9 @@ def read_map(map_id: int, db: Session = Depends(get_db), current_user: User = De
     return {
         "id": game_map.id,
         "grid": game_map.grid,
-        "price": game_map.price,
+        "points": game_map.points,
         "owner_username": game_map.owner.username if game_map.owner else "Unknown",
         "owner_id": game_map.owner_id,
         "completed": is_completed
     }
+

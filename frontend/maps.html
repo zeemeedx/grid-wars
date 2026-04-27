@@ -18,7 +18,7 @@
                         <span v-if="mapa.completed" title="Concluído">✅</span>
                     </div>
                     <span>Criado por: {{ mapa.owner_username }}</span>
-                    <span v-if="!isMine">Recompensa: {{ mapa.price }} 🪙</span>
+                    <span v-if="!isMine">Recompensa: ⭐ {{ mapa.points }} | 🪙 {{ Math.floor(mapa.points / 2) }}</span>
                     <div class="mini-grid">
                         <div v-for="(tipo, index) in mapa.grid" :key="index" :class="['mini-cell', 'type-' + tipo]"></div>
                     </div>

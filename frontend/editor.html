@@ -24,10 +24,11 @@
                 const rotaPlanejada = ref([0])
                 const mostrarVitoria = ref(false)
                 const isReadOnly = ref(false)
-                const currentMapPrice = ref(10)
+                const currentMapPoints = ref(20)
                 const isCompleted = ref(false)
 
                 const moedas = ref(0)
+                const pontos = ref(0)
                 const itensBloqueados = ref({
                     1: false,
                     2: false,
@@ -80,7 +81,7 @@
                     let passo = 1
                     const velocidade = 300
 
-                    const intervalo = setInterval(() => {
+                    const intervalo = setInterval(async () => {
                         if (passo < rotaPlanejada.value.length) {
                             playerPos.value = rotaPlanejada.value[passo]
                             passo++
@@ -90,26 +91,26 @@
 
                             if (grade.value[playerPos.value] === -2) {
                                 mostrarVitoria.value = true
-                                if (isReadOnly.value) {
+                                if (isReadOnly.value && !isCompleted.value) {
                                     const token = localStorage.getItem('token')
                                     const mapId = new URLSearchParams(window.location.search).get('map_id')
 
-                                    // Award coins only if NOT completed before
-                                    if (!isCompleted.value) {
-                                        moedas.value += currentMapPrice.value
-                                        
-                                        fetch(`http://localhost:8000/users/me/coins?coins=${moedas.value}`, {
-                                            method: 'PUT',
-                                            headers: { 'Authorization': `Bearer ${token}` }
-                                        }).catch(e => console.error("Erro ao salvar moedas:", e))
-
-                                        // Mark as completed in DB
-                                        fetch(`http://localhost:8000/maps/${mapId}/complete`, {
+                                    try {
+                                        const response = await fetch(`http://localhost:8000/maps/${mapId}/complete`, {
                                             method: 'POST',
                                             headers: { 'Authorization': `Bearer ${token}` }
-                                        }).then(() => {
+                                        })
+                                        if (response.ok) {
+                                            const data = await response.json()
+                                            if (data.points_earned) {
+                                                pontos.value += data.points_earned
+                                                moedas.value += data.coins_earned
+                                                alert(`Parabéns! Você ganhou ${data.points_earned} pontos e ${data.coins_earned} moedas!`)
+                                            }
                                             isCompleted.value = true
-                                        }).catch(e => console.error("Erro ao completar mapa:", e))
+                                        }
+                                    } catch (e) {
+                                        console.error("Erro ao completar mapa:", e)
                                     }
                                 }
                             }
@@ -134,10 +135,10 @@
                         return
                     }
 
-                    const preco = prompt("Defina o preço do seu mapa (10 a 100 moedas):", "10")
-                    const precoInt = parseInt(preco)
-                    if (isNaN(precoInt) || precoInt < 10 || precoInt > 100) {
-                        alert("Preço inválido! Deve ser entre 10 e 100.")
+                    const pts = prompt("Defina a pontuação do seu mapa (20 a 200 pontos):", "20")
+                    const ptsInt = parseInt(pts)
+                    if (isNaN(ptsInt) || ptsInt < 20 || ptsInt > 200) {
+                        alert("Pontuação inválida! Deve ser entre 20 e 200.")
                         return
                     }
 
@@ -148,10 +149,10 @@
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`
                             },
-                            body: JSON.stringify({ grid: grade.value, price: precoInt })
+                            body: JSON.stringify({ grid: grade.value, points: ptsInt })
                         })
                         if (response.ok) {
-                            alert("Mapa salvo no banco de dados.")
+                            alert("Mapa salvo com sucesso!")
                             continuarEditando()
                         } else {
                             alert("Erro ao salvar mapa.")
@@ -184,6 +185,7 @@
                         if (userRes.ok) {
                             const userData = await userRes.json()
                             moedas.value = userData.coins
+                            pontos.value = userData.points
                         } else {
                             localStorage.removeItem('token')
                             window.location.href = 'auth.html'
@@ -205,7 +207,7 @@
                                     grade.value = mapData.grid
                                     grade.value[99] = -2
                                 }
-                                currentMapPrice.value = mapData.price
+                                currentMapPoints.value = mapData.points
                                 isCompleted.value = mapData.completed
                             }
                         } catch (error) {
@@ -260,6 +262,7 @@
 
                 return {
                     moedas,
+                    pontos,
                     itensBloqueados,
                     precos,
                     grade,
@@ -300,7 +303,7 @@
         </div>
 
         <div class="grid" @mouseup.window="pararDesenho">
-            <div class="coins-display">🪙{{ moedas }}</div>
+            <div class="coins-display">🪙{{ moedas }} ⭐{{ pontos }}</div>
             <div class="erase" v-if="!isReadOnly" :class="{ selected: borrachaSelecionada }" @click="toggleBorracha">🗑️</div>
             <div class="plan" :class="{ selected: planejarTrajeto }" @click="togglePlanejador">✏️</div>
             <div class="play" v-if="mostrarPlay" @click="executarPlay">▶️</div>
