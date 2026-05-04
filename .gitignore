@@ -1,0 +1,7 @@
+node_modules/
+.expo/
+npm-debug.*
+*.jks
+*.p8
+*.pkcs12
+*.pfx
