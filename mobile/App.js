@@ -5,7 +5,7 @@ import axios from 'axios';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRID_SIZE = Math.floor(SCREEN_WIDTH * 0.9 / 10) * 10; 
 const CELL_SIZE = GRID_SIZE / 10; 
-const API_BASE_URL = 'http://172.20.10.6:8000'; 
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000'; 
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -26,15 +26,22 @@ export default function App() {
 
   const handleLogin = async () => {
     try {
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('password', password);
-      const res = await axios.post(`${API_BASE_URL}/token`, formData);
+      // FastAPI OAuth2 expects application/x-www-form-urlencoded
+      const data = `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+      
+      const res = await axios.post(`${API_BASE_URL}/token`, data, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      
       const userRes = await axios.get(`${API_BASE_URL}/users/me`, {
         headers: { Authorization: `Bearer ${res.data.access_token}` }
       });
       setUser(userRes.data);
-    } catch (e) { Alert.alert("Erro", "Login falhou."); }
+    } catch (e) {
+      console.log("Erro de Login:", e);
+      const msg = e.response ? `Erro ${e.response.status}: ${JSON.stringify(e.response.data.detail)}` : "Não foi possível conectar ao servidor. Verifique o IP e se o backend está rodando.";
+      Alert.alert("Erro de Login", msg);
+    }
   };
 
   const pintar = (index) => {
