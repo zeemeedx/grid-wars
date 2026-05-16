@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GridWars - Login</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/style.css">
+  <script type="module" crossorigin src="/assets/auth-DU70elX_.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/vue.esm-bundler-D4p9D1o_.js">
+</head>
+<body>
+    <div id="app" class="auth-container">
+        <h1 class="main-title">GridWars</h1>
+        <h2 v-if="isLogin">Login</h2>
+        <h2 v-else>Criar Conta</h2>
+
+        <form @submit.prevent="handleAuth" class="auth-form">
+            <input type="text" v-model="username" placeholder="Usuário" required>
+            <input type="password" v-model="password" placeholder="Senha" required>
+            <button type="submit">{{ isLogin ? 'Entrar' : 'Cadastrar' }}</button>
+        </form>
+
+        <p class="auth-toggle" @click="isLogin = !isLogin">
+            {{ isLogin ? 'Não tem conta? Crie uma!' : 'Já tem conta? Faça login!' }}
+        </p>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GridWars - Menu</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/style.css">
+  <script type="module" crossorigin src="/assets/main-DKWI4EpM.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/vue.esm-bundler-D4p9D1o_.js">
+</head>
+<body>
+    <div id="app" class="menu-container">
+        <div v-if="user" class="user-info">
+            <span>👤 {{ user.username }} (⭐ {{ user.points }} | 🪙 {{ user.coins }})</span>
+            <button class="logout-btn" @click="logout">Sair</button>
+        </div>
+        <h1 class="main-title">GridWars</h1>
+        
+        <div class="menu-buttons">
+            <button class="menu-btn" @click="irParaCriar">Criar</button>
+            <button class="menu-btn" @click="irParaMapas(false)">Jogar Mapas</button>
+            <button class="menu-btn" @click="irParaMapas(true)">Meus Mapas</button>
+            <button class="menu-btn" @click="verRanking">Ver Ranking</button>
+        </div>
+
+        <div v-if="mostrarRanking" class="ranking-box">
+            <div class="ranking-tabs">
+                <button :class="{ active: rankingTipo === 'points' }" @click="setRankingTipo('points')">Melhores Jogadores</button>
+                <button :class="{ active: rankingTipo === 'maps' }" @click="setRankingTipo('maps')">Maiores Criadores</button>
+            </div>
+
+            <h2 v-if="rankingTipo === 'points'">Ranking por Pontos</h2>
+            <h2 v-else>Ranking por Criações</h2>
+
+            <ul v-if="jogadores.length > 0">
+                <li v-for="(player, index) in jogadores" :key="player.id">
+                    <strong>{{ index + 1 }}º</strong> {{ player.username }} 
+                    <span v-if="rankingTipo === 'points'">({{ player.points }} pontos)</span>
+                    <span v-else>({{ player.map_count }} mapas)</span>
+                </li>
+            </ul>
+            <p v-else>Nenhum jogador encontrado.</p>
+        </div>
+
+    </div>
+
+</body>
+</html>
