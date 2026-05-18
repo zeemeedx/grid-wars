@@ -1,4 +1,6 @@
 import { createApp, ref, onMounted } from 'vue'
+declare var process: any;
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 interface User {
     id: number;
@@ -24,10 +26,10 @@ createApp({
             isMine.value = urlParams.get('mine') === 'true'
             const token = localStorage.getItem('token')
             
-            let url = 'http://localhost:8000/maps/'
+            let url = `${BASE_URL}/maps/`;
             if (isMine.value) {
                 try {
-                    const userRes = await fetch('http://localhost:8000/users/me', {
+                    const userRes = await fetch(`${BASE_URL}/users/me`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     })
                     if (userRes.ok) {
@@ -47,7 +49,7 @@ createApp({
                         mapas.value = allMaps
                     } else {
                         // Filter out mine if it's "Jogar Mapas"
-                        const userRes = await fetch('http://localhost:8000/users/me', {
+                        const userRes = await fetch(`${BASE_URL}/users/me`, {
                             headers: { 'Authorization': `Bearer ${token}` }
                         })
                         if (userRes.ok) {

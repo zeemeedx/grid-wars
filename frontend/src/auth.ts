@@ -1,4 +1,5 @@
 import { createApp, ref } from 'vue'
+declare var process: any;
 
 createApp({
     setup() {
@@ -24,7 +25,8 @@ createApp({
                     headers['Content-Type'] = 'application/json';
                 }
 
-                const response = await fetch(`http://localhost:8000/${endpoint}`, {
+                const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+                const response = await fetch(`${BASE_URL}/${endpoint}`, {
                     method: 'POST',
                     headers: headers,
                     body: body

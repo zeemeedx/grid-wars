@@ -1,4 +1,6 @@
 import { createApp, ref, onMounted } from 'vue'
+declare var process: any;
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 interface User {
     username: string;
@@ -28,7 +30,7 @@ createApp({
             }
 
             try {
-                const response = await fetch('http://localhost:8000/users/me', {
+                const response = await fetch(`${BASE_URL}/users/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
                 if (response.ok) {
@@ -62,7 +64,7 @@ createApp({
         const verRanking = async () => {
             mostrarRanking.value = true
             try {
-                const response = await fetch(`http://localhost:8000/players/?sort_by=${rankingTipo.value}`)
+                const response = await fetch(`${BASE_URL}/players/?sort_by=${rankingTipo.value}`)
                 if (response.ok) {
                     jogadores.value = await response.json()
                 }

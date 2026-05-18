@@ -1,4 +1,6 @@
 import { createApp, ref, onMounted, onUnmounted } from 'vue'
+declare var process: any;
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 createApp({
     setup() {
@@ -85,7 +87,7 @@ createApp({
                             const mapId = new URLSearchParams(window.location.search).get('map_id')
 
                             try {
-                                const response = await fetch(`http://localhost:8000/maps/${mapId}/complete`, {
+                                const response = await fetch(`${BASE_URL}/maps/${mapId}/complete`, {
                                     method: 'POST',
                                     headers: { 'Authorization': `Bearer ${token}` }
                                 })
@@ -133,7 +135,7 @@ createApp({
             }
 
             try {
-                const response = await fetch("http://localhost:8000/maps/", {
+                const response = await fetch(`${BASE_URL}/maps/`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -169,7 +171,7 @@ createApp({
             isReadOnly.value = mode === 'play'
 
             try {
-                const userRes = await fetch('http://localhost:8000/users/me', {
+                const userRes = await fetch(`${BASE_URL}/users/me`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 })
                 if (userRes.ok) {
@@ -188,7 +190,7 @@ createApp({
             
             if (mapId) {
                 try {
-                    const response = await fetch(`http://localhost:8000/maps/${mapId}`, {
+                    const response = await fetch(`${BASE_URL}/maps/${mapId}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     })
                     if (response.ok) {
