@@ -4,4 +4,4 @@ npm-debug.*
 *.jks
 *.p8
 *.pkcs12
-*.pfx
+*.pfxpostgres.tar.gz
