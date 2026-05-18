@@ -5,3 +5,5 @@ npm-debug.*
 *.p8
 *.pkcs12
 *.pfxpostgres.tar.gz
+api.tar.gz
+frontend.tar.gz
