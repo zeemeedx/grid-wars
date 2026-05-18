@@ -3,35 +3,27 @@ version: '3.8'
 services:
   api:
     build: ./backend
-    container_name: gridwars_api
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/gridwars
     ports:
-      - "8000:8000"
-    volumes:
-      - "./backend:/app"
-    depends_on:
-      - db
+      - "8052:8000"  
+    
 
   db:
     image: postgres:15-alpine
-    container_name: gridwars_db
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: gridwars
     volumes:
       - db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql 
+    
 
   frontend:
     build: ./frontend
-    container_name: gridwars_frontend
     ports:
-      - "8080:80"
-    depends_on:
-      - api
+      - "8051:80" 
       
 volumes:
-  db_data:     
+  db_data:
