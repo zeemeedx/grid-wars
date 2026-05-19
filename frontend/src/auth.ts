@@ -1,5 +1,4 @@
 import { createApp, ref } from 'vue'
-declare var process: any;
 
 createApp({
     setup() {
@@ -25,7 +24,7 @@ createApp({
                     headers['Content-Type'] = 'application/json';
                 }
 
-                const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+                const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8052';
                 const response = await fetch(`${BASE_URL}/${endpoint}`, {
                     method: 'POST',
                     headers: headers,
