@@ -1,0 +1,10 @@
+services:
+  api:
+    image: grid-wars-api
+    build:
+      context: ./backend
+
+  frontend:
+    image: grid-wars-frontend
+    build:
+      context: ./frontend
