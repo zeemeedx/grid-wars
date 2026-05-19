@@ -7,3 +7,4 @@ npm-debug.*
 *.pfxpostgres.tar.gz
 api.tar.gz
 frontend.tar.gz
+frontend/*env
