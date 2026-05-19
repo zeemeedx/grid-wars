@@ -1,29 +1,31 @@
-version: '3.8'
-
 services:
-  api:
-    build: ./backend
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/gridwars
-    ports:
-      - "8052:8000"  
-    
-
   db:
     image: postgres:15-alpine
+    restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: gridwars
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=gridwars
     volumes:
       - db_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql 
-    
+
+  api:
+    image: grid-wars-api
+    restart: always
+    ports:
+      - "8052:8000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/gridwars
+    depends_on:
+      - db
 
   frontend:
-    build: ./frontend
+    image: grid-wars-frontend
+    restart: always
     ports:
-      - "8051:80" 
-      
+      - "8051:80"
+    depends_on:
+      - api
+
 volumes:
   db_data:
