@@ -11,6 +11,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true); // Toggle entre Login e Cadastro
   const [grade, setGrade] = useState(Array(100).fill(0).map((v, i) => i === 99 ? -2 : v));
   const [itemSelecionado, setItemSelecionado] = useState(1); 
   const [borrachaSelecionada, setBorrachaSelecionada] = useState(false);
@@ -18,7 +19,7 @@ export default function App() {
   const [playerPos, setPlayerPos] = useState(0);
   const [rotaPlanejada, setRotaPlanejada] = useState([0]);
   const [mostrarVitoria, setMostrarVitoria] = useState(false);
-  const [executando, setExecutando] = useState(false); // Novo estado para animação
+  const [executando, setExecutando] = useState(false); 
   
   const gridLayout = useRef({ x: 0, y: 0 });
   const stateRef = useRef({ grade, itemSelecionado, borrachaSelecionada, planejarTrajeto, executando });
@@ -26,21 +27,30 @@ export default function App() {
 
   const handleLogin = async () => {
     try {
-      // FastAPI OAuth2 expects application/x-www-form-urlencoded
       const data = `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
-      
       const res = await axios.post(`${API_BASE_URL}/token`, data, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
       });
-      
       const userRes = await axios.get(`${API_BASE_URL}/users/me`, {
         headers: { Authorization: `Bearer ${res.data.access_token}` }
       });
       setUser(userRes.data);
     } catch (e) {
       console.log("Erro de Login:", e);
-      const msg = e.response ? `Erro ${e.response.status}: ${JSON.stringify(e.response.data.detail)}` : "Não foi possível conectar ao servidor. Verifique o IP e se o backend está rodando.";
-      Alert.alert("Erro de Login", msg);
+      const msg = e.response?.data?.detail || "Não foi possível conectar ao servidor.";
+      Alert.alert("Erro de Login", JSON.stringify(msg));
+    }
+  };
+
+  const handleRegister = async () => {
+    try {
+      await axios.post(`${API_BASE_URL}/register`, { username, password });
+      Alert.alert("Sucesso", "Conta criada com sucesso! Agora você pode entrar.");
+      setIsLogin(true); // Volta para a tela de login
+    } catch (e) {
+      console.log("Erro de Cadastro:", e);
+      const msg = e.response?.data?.detail || "Erro ao tentar criar conta.";
+      Alert.alert("Erro de Cadastro", JSON.stringify(msg));
     }
   };
 
@@ -81,21 +91,46 @@ export default function App() {
 
   const moverNoPlanejamento = (dir) => {
     if (executando) return;
-    let novaPos = playerPos;
-    if (dir === 'W' && playerPos >= 10) novaPos -= 10;
-    else if (dir === 'S' && playerPos <= 89) novaPos += 10;
-    else if (dir === 'A' && playerPos % 10 !== 0) novaPos -= 1;
-    else if (dir === 'D' && playerPos % 10 !== 9) novaPos += 1;
     
-    if (grade[novaPos] === 1) return; // Parede bloqueia o traçado
+    const canMove = (pos, d) => {
+      if (d === 'W' && pos < 10) return false;
+      if (d === 'S' && pos >= 90) return false;
+      if (d === 'A' && pos % 10 === 0) return false;
+      if (d === 'D' && pos % 10 === 9) return false;
+      
+      let nextPos = pos;
+      if (d === 'W') nextPos -= 10;
+      else if (d === 'S') nextPos += 10;
+      else if (d === 'A') nextPos -= 1;
+      else if (d === 'D') nextPos += 1;
+      
+      return grade[nextPos] !== 1;
+    };
 
-    if (novaPos !== playerPos) {
-      setPlayerPos(novaPos);
-      setRotaPlanejada([...rotaPlanejada, novaPos]);
+    if (canMove(playerPos, dir)) {
+      let novaPos = playerPos;
+      if (dir === 'W') novaPos -= 10;
+      else if (dir === 'S') novaPos += 10;
+      else if (dir === 'A') novaPos -= 1;
+      else if (dir === 'D') novaPos += 1;
+
+      let novasPosicoes = [...rotaPlanejada, novaPos];
+      let currentPos = novaPos;
+
+      // Lógica de deslize no Gelo (ID 2)
+      while (grade[currentPos] === 2 && canMove(currentPos, dir)) {
+        if (dir === 'W') currentPos -= 10;
+        else if (dir === 'S') currentPos += 10;
+        else if (dir === 'A') currentPos -= 1;
+        else if (dir === 'D') currentPos += 1;
+        novasPosicoes.push(currentPos);
+      }
+
+      setPlayerPos(currentPos);
+      setRotaPlanejada(novasPosicoes);
     }
   };
 
-  // F1: Execução de Rotas (Animação)
   const iniciarExecucao = () => {
     if (rotaPlanejada.length <= 1) return;
     setExecutando(true);
@@ -112,7 +147,7 @@ export default function App() {
           setMostrarVitoria(true);
         }
       }
-    }, 200); // Velocidade do movimento
+    }, 200); 
   };
 
   const resetarTrajeto = () => {
@@ -124,10 +159,19 @@ export default function App() {
   if (!user) {
     return (
       <View style={styles.loginContainer}>
-        <Text style={styles.title}>GRIDWARS LOGIN</Text>
+        <Text style={styles.title}>{isLogin ? "GRIDWARS LOGIN" : "CRIAR CONTA"}</Text>
         <TextInput style={styles.input} placeholder="Usuário" onChangeText={setUsername} autoCapitalize="none" />
         <TextInput style={styles.input} placeholder="Senha" secureTextEntry onChangeText={setPassword} />
-        <TouchableOpacity style={styles.btn} onPress={handleLogin}><Text style={{fontWeight: 'bold'}}>ENTRAR</Text></TouchableOpacity>
+        
+        <TouchableOpacity style={styles.btn} onPress={isLogin ? handleLogin : handleRegister}>
+          <Text style={{fontWeight: 'bold'}}>{isLogin ? "ENTRAR" : "CADASTRAR"}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={{marginTop: 20}}>
+          <Text style={{color: 'blue', textDecorationLine: 'underline'}}>
+            {isLogin ? "Não tem conta? Crie uma agora" : "Já tem conta? Faça login"}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -227,7 +271,7 @@ const styles = StyleSheet.create({
   cell: { width: CELL_SIZE, height: CELL_SIZE, borderWidth: 0.2, borderColor: '#BBB', justifyContent: 'center', alignItems: 'center' },
   type0: { backgroundColor: '#CCCCCC' }, 
   type1: { backgroundColor: '#222222' }, 
-  type2: { backgroundColor: '#00008B' }, 
+  type2: { backgroundColor: '#ADD8E6' }, 
   goalCell: { backgroundColor: '#28a745' }, 
   playerNode: { width: CELL_SIZE * 0.7, height: CELL_SIZE * 0.7, borderRadius: CELL_SIZE * 0.35, backgroundColor: '#008B8B', borderWidth: 1 }, 
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#87CEEB' }, 
