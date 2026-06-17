@@ -29,6 +29,10 @@ h2 {
     user-select: none;
     -webkit-user-drag: none;
     position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
 }
 
 .cell:hover {
@@ -40,11 +44,11 @@ h2 {
 }
 
 .cell.type-2 {
-    background: #007;
+    background: #ADD8E6;
 }
 
-.cell.type-3 {
-    background: #FF8C00;
+.cell.type-3, .cell.type-4 {
+    background: #FF0000;
 }
 
 .cell.type--2 {
@@ -115,17 +119,6 @@ h2 {
     color: red;
 }
 
-.inventory {
-    margin-bottom: 20px;
-    border: 4px solid rgb(0, 0, 0);
-    padding: 10px;
-    border-radius: 10px;
-    background-color: lightyellow;
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-}
-
 .item {
     width: 60px;
     height: 60px;
@@ -136,6 +129,7 @@ h2 {
     align-items: center;
     position: relative;
     transition: background 0.3s;
+    font-size: 30px;
 }
 
 .item.type-1 {
@@ -143,11 +137,51 @@ h2 {
 }
 
 .item.type-2 {
-    background: #007;
+    background: #ADD8E6;
 }
 
 .item.type-3 {
-    background: #FF8C00;
+    background: #FF0000;
+}
+
+.editor-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.toggle-container {
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-dir {
+    padding: 8px 15px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: lightyellow;
+    border: 3px solid black;
+    border-radius: 5px;
+    transition: background 0.2s;
+}
+
+.toggle-dir:hover {
+    background-color: #ffdd55;
+}
+
+.inventory {
+    border: 4px solid rgb(0, 0, 0);
+    padding: 10px;
+    border-radius: 10px;
+    background-color: lightyellow;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
 }
 
 .item.locked {
@@ -158,20 +192,22 @@ h2 {
 .item.locked::before {
     content: '🔒';
     position: absolute;
-    font-size: 24px;
+    top: 5px;
+    font-size: 18px;
     z-index: 10;
 }
 
 .item .price {
     position: absolute;
-    bottom: -25px;
     font-size: 14px;
     font-weight: bold;
     color: black;
-    background: lightyellow;
+    background: rgba(255, 255, 224, 0.9);
     padding: 2px 5px;
     border: 2px solid black;
     border-radius: 5px;
+    z-index: 20;
+    pointer-events: none;
 }
 
 .coins-display {
@@ -407,11 +443,15 @@ h2 {
     width: 15px;
     height: 15px;
     background: #CCCCCC;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 8px;
 }
 
 .mini-cell.type-1 { background: #222222; }
-.mini-cell.type-2 { background: #007; }
-.mini-cell.type-3 { background: #FF8C00; }
+.mini-cell.type-2 { background: #ADD8E6; }
+.mini-cell.type-3, .mini-cell.type-4 { background: #FF0000; }
 .mini-cell.type--2 { background: #0A4; }
 
 .map-item {

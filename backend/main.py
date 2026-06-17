@@ -37,6 +37,7 @@ class User(Base):
     hashed_password = Column(String)
     coins = Column(Integer, default=0)
     points = Column(Integer, default=0)
+    unlocked_items = Column(JSON, default=lambda: [1, 2])
     maps = relationship("GameMap", back_populates="owner")
     finished_maps = relationship("GameMap", secondary=completed_maps)
 
@@ -70,6 +71,7 @@ class UserOut(BaseModel):
     username: str
     coins: int
     points: int
+    unlocked_items: list[int] = [1, 2]
     map_count: int = 0
     class Config:
         from_attributes = True
@@ -166,6 +168,26 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @app.get("/users/me", response_model=UserOut)
 async def read_users_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+@app.post("/users/me/buy_item/{item_id}")
+async def buy_item(item_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    prices = {3: 50}
+    if item_id in current_user.unlocked_items:
+        raise HTTPException(status_code=400, detail="Item already unlocked")
+    if item_id not in prices:
+        raise HTTPException(status_code=400, detail="Item not found")
+    if current_user.coins < prices[item_id]:
+        raise HTTPException(status_code=400, detail="Not enough coins")
+    
+    current_user.coins -= prices[item_id]
+    
+    # Update JSON field (need to re-assign or use flag_modified)
+    items = list(current_user.unlocked_items)
+    items.append(item_id)
+    current_user.unlocked_items = items
+    
+    db.commit()
+    return {"coins": current_user.coins, "unlocked_items": current_user.unlocked_items}
 
 @app.put("/users/me/coins")
 async def update_my_coins(coins: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

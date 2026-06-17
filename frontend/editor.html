@@ -10,11 +10,19 @@
 <body>
     <div id="app">
         <button class="back-btn" @click="voltar">⬅ Voltar</button>
-        <div class="inventory" v-if="!isReadOnly">
-            <div class="item type-1" :class="{ selected: itemSelecionado === 1 }" @click="selecionarItem(1)"></div>
-            <div class="item type-2" :class="{ selected: itemSelecionado === 2 }" @click="selecionarItem(2)"></div>
-            <div class="item type-3" :class="{ selected: itemSelecionado === 3, locked: itensBloqueados[3] }" @click="selecionarItem(3)">
-                <span v-if="itensBloqueados[3]" class="price">{{ precos[3] }}🪙</span>
+        <div class="editor-controls" v-if="!isReadOnly">
+            <div class="toggle-container">
+                <button v-if="itemSelecionado === 3" class="toggle-dir" @click="toggleEnemyDirection">
+                    Alternar Direção: {{ enemyDirection === 'h' ? '↔️' : '↕️' }}
+                </button>
+            </div>
+            <div class="inventory">
+                <div class="item type-1" :class="{ selected: itemSelecionado === 1 }" @click="selecionarItem(1)"></div>
+                <div class="item type-2" :class="{ selected: itemSelecionado === 2 }" @click="selecionarItem(2)"></div>
+                <div class="item type-3" :class="{ selected: itemSelecionado === 3, locked: itensBloqueados[3] }" @click="selecionarItem(3)">
+                    <span v-if="itensBloqueados[3]" class="price">{{ precos[3] }}🪙</span>
+                    <span v-else>{{ enemyDirection === 'h' ? '↔️' : '↕️' }}</span>
+                </div>
             </div>
         </div>
 
@@ -36,6 +44,8 @@
                 class="cell" :class="['type-' + tipo, { 'has-player': index === playerPos, 'is-trail': (planejarTrajeto || isPlaying) && rotaPlanejada.includes(index) }]"
                 @mousedown="iniciarDesenho(index)"
                 @mouseenter="pintar(index)">
+                <span v-if="tipo === 3">↔️</span>
+                <span v-if="tipo === 4">↕️</span>
             </div>
         </div>
     </div>

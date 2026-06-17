@@ -20,7 +20,10 @@
                     <span>Criado por: {{ mapa.owner_username }}</span>
                     <span v-if="!isMine">Recompensa: ⭐ {{ mapa.points }} | 🪙 {{ Math.floor(mapa.points / 2) }}</span>
                     <div class="mini-grid">
-                        <div v-for="(tipo, index) in mapa.grid" :key="index" :class="['mini-cell', 'type-' + tipo]"></div>
+                        <div v-for="(tipo, index) in mapa.grid" :key="index" :class="['mini-cell', 'type-' + tipo]">
+                            <span v-if="tipo === 3" style="font-size: 8px;">↔️</span>
+                            <span v-if="tipo === 4" style="font-size: 8px;">↕️</span>
+                        </div>
                     </div>
                 </li>
             </ul>

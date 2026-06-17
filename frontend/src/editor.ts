@@ -17,6 +17,11 @@ createApp({
         const currentMapPoints = ref(20)
         const isCompleted = ref(false)
 
+        const enemyDirection = ref<'h' | 'v'>('h')
+        const toggleEnemyDirection = () => {
+            enemyDirection.value = enemyDirection.value === 'h' ? 'v' : 'h'
+        }
+
         const moedas = ref(0)
         const pontos = ref(0)
         const itensBloqueados = ref<Record<number, boolean>>({
@@ -43,20 +48,37 @@ createApp({
             if (!planejarTrajeto.value || mostrarPlay.value) return
 
             const tecla = event.key.toLowerCase()
-            let novaPos = playerPos.value
+            let dir = 0
 
-            if (tecla == 'w' && playerPos.value >= 10) novaPos -= 10
-            else if (tecla == 's' && playerPos.value <= 89) novaPos += 10
-            else if (tecla == 'a' && playerPos.value % 10 !== 0) novaPos -= 1
-            else if (tecla == 'd' && playerPos.value % 10 !== 9) novaPos += 1
+            if (tecla == 'w') dir = -10
+            else if (tecla == 's') dir = 10
+            else if (tecla == 'a') dir = -1
+            else if (tecla == 'd') dir = 1
 
-            if (grade.value[novaPos] === 1) return
-            
-            if (novaPos !== playerPos.value) {
+            if (dir === 0) return
+
+            const canMove = (pos: number, d: number) => {
+                if (d === -10 && pos < 10) return false
+                if (d === 10 && pos >= 90) return false
+                if (d === -1 && pos % 10 === 0) return false
+                if (d === 1 && pos % 10 === 9) return false
+                if (grade.value[pos + d] === 1) return false
+                return true
+            }
+
+            if (canMove(playerPos.value, dir)) {
+                let novaPos = playerPos.value + dir
                 playerPos.value = novaPos
                 rotaPlanejada.value.push(novaPos)
 
-                if (grade.value[novaPos] === -2) {
+                // Ice sliding logic (ID 2)
+                while (grade.value[novaPos] === 2 && canMove(novaPos, dir)) {
+                    novaPos += dir
+                    playerPos.value = novaPos
+                    rotaPlanejada.value.push(novaPos)
+                }
+
+                if (grade.value[playerPos.value] === -2) {
                     mostrarPlay.value = true
                 }
             }
@@ -68,18 +90,74 @@ createApp({
             playerPos.value = rotaPlanejada.value[0]
             isPlaying.value = true
 
+            const staticGrid = [...grade.value]
+            const inimigosAtivos = [] as {pos: number, dir: number, type: number}[]
+            
+            grade.value.forEach((tipo, index) => {
+                if (tipo === 3 || tipo === 4) {
+                    inimigosAtivos.push({
+                        pos: index,
+                        dir: 1,
+                        type: tipo
+                    })
+                    staticGrid[index] = 0
+                }
+            })
+
             let passo = 1
             const velocidade = 300
 
             const intervalo = setInterval(async () => {
                 if (passo < rotaPlanejada.value.length) {
                     playerPos.value = rotaPlanejada.value[passo]
+
+                    inimigosAtivos.forEach(enemy => {
+                        const isHorizontal = enemy.type === 3
+                        const step = isHorizontal ? 1 : 10
+                        
+                        const checkCollision = (pos: number, d: number) => {
+                            if (isHorizontal) {
+                                if (d === 1 && pos % 10 === 9) return true
+                                if (d === -1 && pos % 10 === 0) return true
+                            } else {
+                                if (d === 1 && pos >= 90) return true
+                                if (d === -1 && pos < 10) return true
+                            }
+                            return staticGrid[pos + (step * d)] === 1
+                        }
+
+                        if (checkCollision(enemy.pos, enemy.dir)) {
+                            enemy.dir *= -1
+                        }
+                        
+                        if (!checkCollision(enemy.pos, enemy.dir)) {
+                            enemy.pos += (step * enemy.dir)
+                        }
+                    })
+
+                    const novaGrade = [...staticGrid]
+                    inimigosAtivos.forEach(e => {
+                        novaGrade[e.pos] = e.type
+                    })
+                    novaGrade[99] = -2
+                    grade.value = novaGrade
+
+                    if (inimigosAtivos.some(e => e.pos === playerPos.value)) {
+                        clearInterval(intervalo)
+                        isPlaying.value = false
+                        grade.value = [...staticGrid]
+                        inimigosAtivos.forEach(e => { grade.value[e.pos] = e.type })
+                        alert("Você foi atingido por um inimigo!")
+                        continuarEditando()
+                        return
+                    }
+
                     passo++
                 } else {
                     clearInterval(intervalo)
                     isPlaying.value = false
 
-                    if (grade.value[playerPos.value] === -2) {
+                    if (grade.value[playerPos.value] === -2 || staticGrid[playerPos.value] === -2) {
                         mostrarVitoria.value = true
                         if (isReadOnly.value && !isCompleted.value) {
                             const token = localStorage.getItem('token')
@@ -104,6 +182,8 @@ createApp({
                             }
                         }
                     }
+                    grade.value = [...staticGrid]
+                    inimigosAtivos.forEach(e => { grade.value[e.pos] = e.type })
                 }
             }, velocidade)
         }
@@ -177,6 +257,12 @@ createApp({
                     const userData = await userRes.json()
                     moedas.value = userData.coins
                     pontos.value = userData.points
+                    
+                    if (userData.unlocked_items) {
+                        userData.unlocked_items.forEach((id: number) => {
+                            itensBloqueados.value[id] = false
+                        })
+                    }
                 } else {
                     localStorage.removeItem('token')
                     window.location.href = 'auth.html'
@@ -210,13 +296,26 @@ createApp({
 
         grade.value[99] = -2
 
-        const selecionarItem = (id: number) => {
+        const selecionarItem = async (id: number) => {
             if (itensBloqueados.value[id]) {
-                if (moedas.value >= precos[id]) {
-                    moedas.value -= precos[id]
-                    itensBloqueados.value[id] = false
-                } else {
-                    alert(`Moedas insuficientes! Custa ${precos[id]} moedas.`)
+                const token = localStorage.getItem('token')
+                try {
+                    const response = await fetch(`${BASE_URL}/users/me/buy_item/${id}`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                    if (response.ok) {
+                        const data = await response.json()
+                        moedas.value = data.coins
+                        itensBloqueados.value[id] = false
+                        alert("Item desbloqueado com sucesso!")
+                    } else {
+                        const errorData = await response.json()
+                        alert(errorData.detail || "Erro ao comprar item.")
+                    }
+                } catch (e) {
+                    console.error("Erro na compra:", e)
+                    alert("Erro de conexão ao tentar comprar o item.")
                 }
                 return
             }
@@ -234,7 +333,11 @@ createApp({
             if (index === 0 || index === 99) return
 
             if (itemSelecionado.value !== null) {
-                grade.value[index] = itemSelecionado.value
+                if (itemSelecionado.value === 3) {
+                    grade.value[index] = enemyDirection.value === 'h' ? 3 : 4
+                } else {
+                    grade.value[index] = itemSelecionado.value
+                }
             } else if (borrachaSelecionada.value) {
                 grade.value[index] = 0
             }
@@ -267,6 +370,8 @@ createApp({
             mostrarVitoria,
             rotaPlanejada,
             isReadOnly,
+            enemyDirection,
+            toggleEnemyDirection,
             selecionarItem,
             toggleBorracha,
             pintar,
