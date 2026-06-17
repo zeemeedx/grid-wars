@@ -136,9 +136,63 @@ export default function App() {
     setExecutando(true);
     let passo = 0;
     
+    // Preparar estado inicial da execução
+    const gridBase = [...grade];
+    const inimigosAtivos = [];
+    gridBase.forEach((tipo, index) => {
+      if (tipo === 3 || tipo === 4) {
+        inimigosAtivos.push({ pos: index, dir: 1, type: tipo });
+        gridBase[index] = 0; // Limpa o inimigo do grid base para ele "flutuar"
+      }
+    });
+
     const intervalo = setInterval(() => {
       if (passo < rotaPlanejada.length) {
-        setPlayerPos(rotaPlanejada[passo]);
+        const playerCurrentPos = rotaPlanejada[passo];
+        setPlayerPos(playerCurrentPos);
+
+        // Mover inimigos
+        inimigosAtivos.forEach(enemy => {
+          const isHorizontal = enemy.type === 3;
+          const step = isHorizontal ? 1 : 10;
+          
+          const checkCollision = (pos, d) => {
+            if (isHorizontal) {
+              if (d === 1 && pos % 10 === 9) return true;
+              if (d === -1 && pos % 10 === 0) return true;
+            } else {
+              if (d === 1 && pos >= 90) return true;
+              if (d === -1 && pos < 10) return true;
+            }
+            return gridBase[pos + (step * d)] === 1; // Colisão com Parede (ID 1)
+          };
+
+          if (checkCollision(enemy.pos, enemy.dir)) {
+            enemy.dir *= -1; // Inverte direção
+          }
+          
+          if (!checkCollision(enemy.pos, enemy.dir)) {
+            enemy.pos += (step * enemy.dir);
+          }
+        });
+
+        // Atualizar visual da grade com novas posições dos inimigos
+        const novaGradeVisual = [...gridBase];
+        inimigosAtivos.forEach(e => {
+          novaGradeVisual[e.pos] = e.type;
+        });
+        setGrade(novaGradeVisual);
+
+        // Verificar colisão Jogador vs Inimigo
+        if (inimigosAtivos.some(e => e.pos === playerCurrentPos)) {
+          clearInterval(intervalo);
+          setExecutando(false);
+          Alert.alert("Game Over", "Você foi atingido por um inimigo!");
+          setGrade([...stateRef.current.grade]); // Restaura grade original (com inimigos nos lugares iniciais)
+          resetarTrajeto();
+          return;
+        }
+
         passo++;
       } else {
         clearInterval(intervalo);
@@ -188,6 +242,18 @@ export default function App() {
           onPress={() => {setItemSelecionado(2); setBorrachaSelecionada(false);}}
         />
         <TouchableOpacity 
+          style={[styles.item, styles.type3, (itemSelecionado === 3 && !borrachaSelecionada) && styles.selected]} 
+          onPress={() => {setItemSelecionado(3); setBorrachaSelecionada(false);}}
+        >
+          <Text style={{fontSize: 20}}>↔️</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.item, styles.type4, (itemSelecionado === 4 && !borrachaSelecionada) && styles.selected]} 
+          onPress={() => {setItemSelecionado(4); setBorrachaSelecionada(false);}}
+        >
+          <Text style={{fontSize: 20}}>↕️</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
           style={[styles.item, styles.eraser, borrachaSelecionada && styles.selected]} 
           onPress={() => {setBorrachaSelecionada(true); setItemSelecionado(null);}}
         >
@@ -209,6 +275,8 @@ export default function App() {
               {rotaPlanejada.includes(index) && index !== playerPos && <View style={styles.dot} />}
               {index === playerPos && <View style={styles.playerNode} />}
               {index === 99 && !rotaPlanejada.includes(99) && <Text style={{fontSize: 12}}>🏁</Text>}
+              {item === 3 && <Text style={{fontSize: 20}}>↔️</Text>}
+              {item === 4 && <Text style={{fontSize: 20}}>↕️</Text>}
             </View>
           ))}
         </View>
@@ -262,7 +330,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
   input: { width: '80%', height: 45, backgroundColor: 'white', borderWidth: 1, marginBottom: 10, padding: 10 },
   btn: { backgroundColor: '#ffdd55', padding: 15, borderRadius: 5, borderWidth: 1, minWidth: 150, alignItems: 'center' },
-  inventory: { flexDirection: 'row', gap: 20, marginBottom: 30 },
+  toggleBtn: { backgroundColor: 'white', padding: 10, borderWidth: 1, borderRadius: 5, marginBottom: 10, minWidth: 200, alignItems: 'center' },
+  inventory: { flexDirection: 'row', gap: 10, marginBottom: 30 },
   item: { width: 55, height: 55, borderWidth: 1, borderRadius: 4 },
   eraser: { backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
   selected: { borderColor: 'red', borderWidth: 4 },
@@ -272,6 +341,8 @@ const styles = StyleSheet.create({
   type0: { backgroundColor: '#CCCCCC' }, 
   type1: { backgroundColor: '#222222' }, 
   type2: { backgroundColor: '#ADD8E6' }, 
+  type3: { backgroundColor: '#FF0000', justifyContent: 'center', alignItems: 'center' }, 
+  type4: { backgroundColor: '#FF0000', justifyContent: 'center', alignItems: 'center' }, 
   goalCell: { backgroundColor: '#28a745' }, 
   playerNode: { width: CELL_SIZE * 0.7, height: CELL_SIZE * 0.7, borderRadius: CELL_SIZE * 0.35, backgroundColor: '#008B8B', borderWidth: 1 }, 
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#87CEEB' }, 
