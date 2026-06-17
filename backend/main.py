@@ -171,7 +171,7 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 
 @app.post("/users/me/buy_item/{item_id}")
 async def buy_item(item_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    prices = {3: 50}
+    prices = {3: 25, 5: 50, 6: 100}
     if item_id in current_user.unlocked_items:
         raise HTTPException(status_code=400, detail="Item already unlocked")
     if item_id not in prices:

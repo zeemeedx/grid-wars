@@ -22,25 +22,51 @@ createApp({
             enemyDirection.value = enemyDirection.value === 'h' ? 'v' : 'h'
         }
 
+        const portalColor = ref(5)
+        const togglePortalColor = () => {
+            if (portalColor.value === 5) portalColor.value = 7
+            else if (portalColor.value === 7) portalColor.value = 8
+            else portalColor.value = 5
+            
+            if ([5, 7, 8].includes(itemSelecionado.value as number)) {
+                itemSelecionado.value = portalColor.value
+            }
+        }
+        const getPortalEmoji = () => {
+            if (portalColor.value === 5) return '🌀'
+            if (portalColor.value === 7) return '🟠'
+            if (portalColor.value === 8) return '🟢'
+            return '🌀'
+        }
+
         const moedas = ref(0)
         const pontos = ref(0)
         const itensBloqueados = ref<Record<number, boolean>>({
             1: false,
             2: false,
-            3: true
+            3: true,
+            5: true,
+            6: true
         })
         const precos: Record<number, number> = {
-            3: 50
+            3: 25,
+            5: 50,
+            6: 100
         }
+        
+        const gridBackup = ref<number[]>([])
 
         const togglePlanejador = () => {
             planejarTrajeto.value = !planejarTrajeto.value
             if (planejarTrajeto.value) {
+                gridBackup.value = [...grade.value]
                 itemSelecionado.value = null
                 borrachaSelecionada.value = false
                 playerPos.value = 0
                 rotaPlanejada.value = [0]
                 mostrarPlay.value = false
+            } else {
+                if (gridBackup.value.length > 0) grade.value = [...gridBackup.value]
             }
         }
     
@@ -62,21 +88,44 @@ createApp({
                 if (d === 10 && pos >= 90) return false
                 if (d === -1 && pos % 10 === 0) return false
                 if (d === 1 && pos % 10 === 9) return false
-                if (grade.value[pos + d] === 1) return false
+                const nextTile = grade.value[pos + d]
+                if (nextTile === 1) return false
                 return true
             }
 
             if (canMove(playerPos.value, dir)) {
-                let novaPos = playerPos.value + dir
-                playerPos.value = novaPos
-                rotaPlanejada.value.push(novaPos)
+                let currPos = playerPos.value
+                let nextPos = currPos + dir
+                let sliding = false
 
-                // Ice sliding logic (ID 2)
-                while (grade.value[novaPos] === 2 && canMove(novaPos, dir)) {
-                    novaPos += dir
-                    playerPos.value = novaPos
-                    rotaPlanejada.value.push(novaPos)
-                }
+                do {
+                    // Portal Logic (IDs 5, 7, 8)
+                    const tileType = grade.value[nextPos]
+                    if ([5, 7, 8].includes(tileType)) {
+                        const otherPortal = grade.value.findIndex((v, i) => v === tileType && i !== nextPos)
+                        if (otherPortal !== -1) {
+                            nextPos = otherPortal
+                        }
+                    }
+
+                    const prevPos = currPos
+                    currPos = nextPos
+                    playerPos.value = currPos
+                    rotaPlanejada.value.push(currPos)
+
+                    // Fragile Floor Logic (ID 6)
+                    if (grade.value[prevPos] === 6) {
+                        grade.value[prevPos] = 1 // Turns into a wall
+                    }
+
+                    // Ice sliding logic (ID 2)
+                    if (grade.value[currPos] === 2 && canMove(currPos, dir)) {
+                        nextPos = currPos + dir
+                        sliding = true
+                    } else {
+                        sliding = false
+                    }
+                } while (sliding)
 
                 if (grade.value[playerPos.value] === -2) {
                     mostrarPlay.value = true
@@ -90,10 +139,14 @@ createApp({
             playerPos.value = rotaPlanejada.value[0]
             isPlaying.value = true
 
-            const staticGrid = [...grade.value]
+            // Use backup to have the clean map state
+            const baseGrid = gridBackup.value.length > 0 ? [...gridBackup.value] : [...grade.value]
+            grade.value = [...baseGrid]
+            
+            const staticGrid = [...baseGrid]
             const inimigosAtivos = [] as {pos: number, dir: number, type: number}[]
             
-            grade.value.forEach((tipo, index) => {
+            baseGrid.forEach((tipo, index) => {
                 if (tipo === 3 || tipo === 4) {
                     inimigosAtivos.push({
                         pos: index,
@@ -109,7 +162,14 @@ createApp({
 
             const intervalo = setInterval(async () => {
                 if (passo < rotaPlanejada.value.length) {
+                    const prevPos = playerPos.value
                     playerPos.value = rotaPlanejada.value[passo]
+
+                    // Visual logic for Fragile Floor breaking
+                    if (grade.value[prevPos] === 6) {
+                        grade.value[prevPos] = 1
+                        staticGrid[prevPos] = 1 // Now a wall for enemy collisions too
+                    }
 
                     inimigosAtivos.forEach(enemy => {
                         const isHorizontal = enemy.type === 3
@@ -135,7 +195,7 @@ createApp({
                         }
                     })
 
-                    const novaGrade = [...staticGrid]
+                    const novaGrade = [...staticGrid] // Use staticGrid as base (clean of enemies)
                     inimigosAtivos.forEach(e => {
                         novaGrade[e.pos] = e.type
                     })
@@ -145,8 +205,7 @@ createApp({
                     if (inimigosAtivos.some(e => e.pos === playerPos.value)) {
                         clearInterval(intervalo)
                         isPlaying.value = false
-                        grade.value = [...staticGrid]
-                        inimigosAtivos.forEach(e => { grade.value[e.pos] = e.type })
+                        if (gridBackup.value.length > 0) grade.value = [...gridBackup.value]
                         alert("Você foi atingido por um inimigo!")
                         continuarEditando()
                         return
@@ -182,8 +241,7 @@ createApp({
                             }
                         }
                     }
-                    grade.value = [...staticGrid]
-                    inimigosAtivos.forEach(e => { grade.value[e.pos] = e.type })
+                    if (gridBackup.value.length > 0) grade.value = [...gridBackup.value]
                 }
             }, velocidade)
         }
@@ -193,6 +251,7 @@ createApp({
             planejarTrajeto.value = false
             playerPos.value = 0
             rotaPlanejada.value = [0]
+            if (gridBackup.value.length > 0) grade.value = [...gridBackup.value]
         }
 
         const salvarMapa = async () => {
@@ -319,7 +378,9 @@ createApp({
                 }
                 return
             }
-            itemSelecionado.value = id
+            if (id === 5) itemSelecionado.value = portalColor.value
+            else itemSelecionado.value = id
+            
             borrachaSelecionada.value = false
         }
 
@@ -335,6 +396,14 @@ createApp({
             if (itemSelecionado.value !== null) {
                 if (itemSelecionado.value === 3) {
                     grade.value[index] = enemyDirection.value === 'h' ? 3 : 4
+                } else if ([5, 7, 8].includes(itemSelecionado.value)) {
+                    const count = grade.value.filter(v => v === itemSelecionado.value).length
+                    if (count >= 2 && grade.value[index] !== itemSelecionado.value) {
+                        alert("Você só pode colocar até 2 portais dessa cor.")
+                        isDrawing.value = false
+                        return
+                    }
+                    grade.value[index] = itemSelecionado.value
                 } else {
                     grade.value[index] = itemSelecionado.value
                 }
@@ -372,6 +441,9 @@ createApp({
             isReadOnly,
             enemyDirection,
             toggleEnemyDirection,
+            portalColor,
+            togglePortalColor,
+            getPortalEmoji,
             selecionarItem,
             toggleBorracha,
             pintar,

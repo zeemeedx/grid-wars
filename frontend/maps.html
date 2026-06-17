@@ -23,6 +23,10 @@
                         <div v-for="(tipo, index) in mapa.grid" :key="index" :class="['mini-cell', 'type-' + tipo]">
                             <span v-if="tipo === 3" style="font-size: 8px;">↔️</span>
                             <span v-if="tipo === 4" style="font-size: 8px;">↕️</span>
+                            <span v-if="tipo === 5" style="font-size: 8px;">🌀</span>
+                            <span v-if="tipo === 7" style="font-size: 8px;">🟠</span>
+                            <span v-if="tipo === 8" style="font-size: 8px;">🟢</span>
+                            <span v-if="tipo === 6" style="font-size: 8px;">🕸️</span>
                         </div>
                     </div>
                 </li>

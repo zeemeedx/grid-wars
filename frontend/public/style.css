@@ -51,6 +51,22 @@ h2 {
     background: #FF0000;
 }
 
+.cell.type-5 {
+    background: #9370DB;
+}
+
+.cell.type-6 {
+    background: #DEB887;
+}
+
+.cell.type-7 {
+    background: #FFA500;
+}
+
+.cell.type-8 {
+    background: #32CD32;
+}
+
 .cell.type--2 {
     background: #0A4;
 }
@@ -142,6 +158,22 @@ h2 {
 
 .item.type-3 {
     background: #FF0000;
+}
+
+.item.type-5 {
+    background: #9370DB;
+}
+
+.item.type-6 {
+    background: #DEB887;
+}
+
+.item.type-7 {
+    background: #FFA500;
+}
+
+.item.type-8 {
+    background: #32CD32;
 }
 
 .editor-controls {
@@ -452,6 +484,10 @@ h2 {
 .mini-cell.type-1 { background: #222222; }
 .mini-cell.type-2 { background: #ADD8E6; }
 .mini-cell.type-3, .mini-cell.type-4 { background: #FF0000; }
+.mini-cell.type-5 { background: #9370DB; }
+.mini-cell.type-6 { background: #DEB887; }
+.mini-cell.type-7 { background: #FFA500; }
+.mini-cell.type-8 { background: #32CD32; }
 .mini-cell.type--2 { background: #0A4; }
 
 .map-item {

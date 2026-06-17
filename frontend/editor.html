@@ -15,6 +15,9 @@
                 <button v-if="itemSelecionado === 3" class="toggle-dir" @click="toggleEnemyDirection">
                     Alternar Direção: {{ enemyDirection === 'h' ? '↔️' : '↕️' }}
                 </button>
+                <button v-if="[5, 7, 8].includes(itemSelecionado)" class="toggle-dir" @click="togglePortalColor">
+                    Alternar Cor: {{ getPortalEmoji() }}
+                </button>
             </div>
             <div class="inventory">
                 <div class="item type-1" :class="{ selected: itemSelecionado === 1 }" @click="selecionarItem(1)"></div>
@@ -22,6 +25,14 @@
                 <div class="item type-3" :class="{ selected: itemSelecionado === 3, locked: itensBloqueados[3] }" @click="selecionarItem(3)">
                     <span v-if="itensBloqueados[3]" class="price">{{ precos[3] }}🪙</span>
                     <span v-else>{{ enemyDirection === 'h' ? '↔️' : '↕️' }}</span>
+                </div>
+                <div class="item" :class="['type-' + portalColor, { selected: [5, 7, 8].includes(itemSelecionado), locked: itensBloqueados[5] }]" @click="selecionarItem(5)">
+                    <span v-if="itensBloqueados[5]" class="price">{{ precos[5] }}🪙</span>
+                    <span v-else>{{ getPortalEmoji() }}</span>
+                </div>
+                <div class="item type-6" :class="{ selected: itemSelecionado === 6, locked: itensBloqueados[6] }" @click="selecionarItem(6)">
+                    <span v-if="itensBloqueados[6]" class="price">{{ precos[6] }}🪙</span>
+                    <span v-else>🕸️</span>
                 </div>
             </div>
         </div>
@@ -46,6 +57,10 @@
                 @mouseenter="pintar(index)">
                 <span v-if="tipo === 3">↔️</span>
                 <span v-if="tipo === 4">↕️</span>
+                <span v-if="tipo === 5">🌀</span>
+                <span v-if="tipo === 7">🟠</span>
+                <span v-if="tipo === 8">🟢</span>
+                <span v-if="tipo === 6">🕸️</span>
             </div>
         </div>
     </div>
